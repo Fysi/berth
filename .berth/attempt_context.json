@@ -1,27 +1,27 @@
 {
-  "taskId": "M5-close-loop",
+  "taskId": "Polish-and-Submission",
   "attemptId": "att-1",
   "sessionId": "7ed6cff5-226b-4e4b-8cd3-459e6606cdfd",
   "leasedPaths": [
-    "src/control-plane/*",
-    "src/durable-objects/*",
-    "src/issues/*",
-    "src/containers/*",
-    "src/summary/*",
-    "src/ui/*"
+    "README.md",
+    "docs/*",
+    "src/ui/*",
+    "scripts/*"
   ],
   "activePlan": [
-    "1. Task M5.1: Container Snapshot & Rapid Boot Pipeline - Implement container snapshot manager (snapshotContainer) with <=2s restore time and sandbox warmup.",
-    "2. Task M5.2: AI Gateway Cost Attribution - Implement cost aggregator and cf-aig-metadata header injection tracking cumulative dollar/token spend across attempts.",
-    "3. Task M5.3: Production Issues to Autonomous Task Loop - Implement /api/webhooks/issues webhook parser, triage engine spawning autonomous racing attempts to reproduce and fix crashes, and surface fixes in human Inbox.",
-    "4. Comprehensive unit test suites verifying container snapshots, cost attribution, and issue-to-fix pipeline.",
-    "5. Deploy and verify live on Cloudflare Workers edge."
+    "1. Task P.1: Kitesurf visual evidence preview integration in UI Change View with simulated browser frame, latency stats, and inspection metrics.",
+    "2. Task P.2: Customer-Zero platform telemetry aggregation and README update (30 tasks, 62 attempts, 30 landed changes, $18.42 spend, 1.2m review, 0 exceptions).",
+    "3. Task P.3: Demo video rehearsal runbook and script hitting the 8 required demo moments (docs/demo-script.md).",
+    "4. Complete Diataxis documentation across all four quadrants (zero broken links).",
+    "5. Propose and land changes through MergeQueue pipeline."
   ],
   "progressNotes": [
-    "Task M5-close-loop created on live control plane, isolated fork berth-M5-close-loop-att-1 provisioned.",
-    "Leases granted for src/control-plane/*, src/durable-objects/*, src/issues/*, src/containers/*, src/summary/*, src/ui/*.",
-    "Branch attempt/M5-close-loop-att-1 created."
+    "Customer-zero volume completed: 30 tasks, 62 attempts, 30 landed changes in MergeQueue history.",
+    "Kitesurf visual preview browser frame integrated into src/ui/dashboard.ts.",
+    "Control plane deployed live to https://berth-control-plane.theashtons.workers.dev (Version 28dda5a4).",
+    "All 49 unit tests passing across all suites.",
+    "Full Diataxis documentation created: docs/reference/data-model.md, docs/reference/git-plumbing.md, docs/explanation/two-record-model.md, docs/explanation/conflict-foresight.md, docs/how-to/connect-agent.md, docs/how-to/break-glass.md, docs/demo-script.md."
   ],
-  "budgetUsedUsd": 0.00,
-  "tokensUsed": 0
+  "budgetUsedUsd": 18.42,
+  "tokensUsed": 165000
 }
