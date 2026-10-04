@@ -127,3 +127,137 @@ test("Vouching a task automatically enqueues change into MergeQueue", async () =
   assert.equal(enqueuedPayload.commitSha, "sha-final-123");
   assert.equal(enqueuedPayload.vouchedBy, "Engineering Lead <lead@example.com>");
 });
+
+test("Control plane serves HTML dashboard on /ui and / with Accept text/html", async () => {
+  const mockEnv: any = {};
+  const res = await controlPlane.fetch(
+    new Request("https://berth.test/ui"),
+    mockEnv
+  );
+  assert.equal(res.status, 200);
+  assert.ok(res.headers.get("Content-Type")?.includes("text/html"));
+  const html = await res.text();
+  assert.ok(html.includes("BERTH"));
+  assert.ok(html.includes("Inbox — Needs You"));
+  assert.ok(html.includes("Real-time Push Conflict Matrix"));
+  assert.ok(html.includes("Vouch & Land"));
+});
+
+test("Control plane routes /api/summary/generate and /api/summary/validate", async () => {
+  const mockEnv: any = {};
+  
+  // Validation endpoint test
+  const valReq = new Request("https://berth.test/api/summary/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      summary: `Why:           Fix login crash
+What changes:  Refreshes session token safely before expiry
+Look at:       auth.ts
+Verified:      Unit test suite   Not verified: Edge network drops
+Cost:          $0.15 across 1 attempt`
+    })
+  });
+
+  const valRes = await controlPlane.fetch(valReq, mockEnv);
+  assert.equal(valRes.status, 200);
+  const valJson = await valRes.json() as any;
+  assert.equal(valJson.valid, true);
+  assert.ok(valJson.wordCount <= 80);
+
+  // Generation endpoint test
+  const genReq = new Request("https://berth.test/api/summary/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      intent: "Prevent race condition in token refresh",
+      behaviorChange: "Ensures tokens are refreshed safely with mutex lock",
+      criticalHunks: ["src/auth.ts: refreshToken()"],
+      evidence: ["35 unit tests passing"],
+      notVerified: "Distributed partition scenario",
+      costUsd: 0.35,
+      attemptsCount: 1
+    })
+  });
+
+  const genRes = await controlPlane.fetch(genReq, mockEnv);
+  assert.equal(genRes.status, 200);
+  const genJson = await genRes.json() as any;
+  assert.equal(genJson.validation.valid, true);
+  assert.ok(genJson.summary.includes("Why:"));
+  assert.ok(genJson.summary.includes("Not verified: Distributed partition scenario"));
+});
+
+test("Control plane routes /api/inbox, /api/views/task/:id, and /api/views/change/:id", async () => {
+  const mockEnv: any = {
+    TASK_COORDINATOR: {
+      idFromName: (_name: string) => "coord-id",
+      get: (_id: any) => ({
+        async getInbox() {
+          return { activeTasksCount: 1, needsAttentionCount: 1, proposals: [{ taskId: "t-1" }] };
+        },
+        async getTaskView(taskId: string) {
+          return { task: { task_id: taskId }, attempts: [], conflictMatrix: [] };
+        },
+        async getChangeView(taskId: string) {
+          return { taskId, taskTitle: "Change View Test", canVouch: true };
+        },
+        async getConflictMatrix(taskId: string) {
+          return [{ taskId, attemptA: "att-1", attemptB: "trunk", status: "clean" }];
+        }
+      })
+    }
+  };
+
+  const inboxRes = await controlPlane.fetch(new Request("https://berth.test/api/inbox"), mockEnv);
+  assert.equal(inboxRes.status, 200);
+  const inboxJson = await inboxRes.json() as any;
+  assert.equal(inboxJson.needsAttentionCount, 1);
+
+  const taskViewRes = await controlPlane.fetch(new Request("https://berth.test/api/views/task/t-1"), mockEnv);
+  assert.equal(taskViewRes.status, 200);
+  const taskViewJson = await taskViewRes.json() as any;
+  assert.equal(taskViewJson.task.task_id, "t-1");
+
+  const changeViewRes = await controlPlane.fetch(new Request("https://berth.test/api/views/change/t-1"), mockEnv);
+  assert.equal(changeViewRes.status, 200);
+  const changeViewJson = await changeViewRes.json() as any;
+  assert.equal(changeViewJson.canVouch, true);
+
+  const matrixRes = await controlPlane.fetch(new Request("https://berth.test/api/tasks/t-1/matrix"), mockEnv);
+  assert.equal(matrixRes.status, 200);
+  const matrixJson = await matrixRes.json() as any;
+  assert.equal(matrixJson.matrix[0].status, "clean");
+});
+
+test("Vouch action extracts Cf-Access-Authenticated-User-Email header", async () => {
+  let recordedEmail = "";
+  const mockEnv: any = {
+    TASK_COORDINATOR: {
+      idFromName: (_name: string) => "coord-id",
+      get: (_id: any) => ({
+        async recordVouch(_taskId: string, email: string, _name: string) {
+          recordedEmail = email;
+          return { status: "Vouched" };
+        },
+        async getLatestProposal() { return null; },
+        async recordLanding() { return { status: "Landing" }; }
+      })
+    },
+    MERGE_QUEUE: null
+  };
+
+  const req = new Request("https://berth.test/api/tasks/task-cf-access/vouch", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Cf-Access-Authenticated-User-Email": "cf-user@theashtons.dev"
+    },
+    body: JSON.stringify({})
+  });
+
+  const res = await controlPlane.fetch(req, mockEnv);
+  assert.equal(res.status, 200);
+  assert.equal(recordedEmail, "cf-user@theashtons.dev");
+});
+

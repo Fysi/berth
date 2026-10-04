@@ -1,6 +1,9 @@
 import { TaskCoordinator } from "../durable-objects/TaskCoordinator.ts";
 import { MergeQueue } from "../durable-objects/MergeQueue.ts";
 import { handleMcpRequest, BERTH_MCP_TOOLS } from "../mcp/index.ts";
+import { renderDashboardHtml } from "../ui/dashboard.ts";
+import { generateHumanSummary } from "../summary/generator.ts";
+import { validateHumanSummary } from "../summary/validator.ts";
 
 export { TaskCoordinator, MergeQueue, handleMcpRequest, BERTH_MCP_TOOLS };
 
@@ -9,13 +12,26 @@ export interface Env {
   TASK_COORDINATOR: DurableObjectNamespace;
   MERGE_QUEUE: DurableObjectNamespace;
   SESSIONS_BUCKET?: R2Bucket;
+  AI_GATEWAY_TOKEN?: string;
+  ACCOUNT_ID?: string;
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const accessEmail = request.headers.get("Cf-Access-Authenticated-User-Email") || "reviewer@theashtons.dev";
 
-    // Health check
+    // 1. Interactive UI Dashboard (HTML)
+    if (url.pathname === "/ui" || (url.pathname === "/" && request.headers.get("Accept")?.includes("text/html"))) {
+      return new Response(renderDashboardHtml(accessEmail), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-cache"
+        }
+      });
+    }
+
+    // 2. Health check
     if (url.pathname === "/health" || url.pathname === "/") {
       return Response.json({
         platform: "Berth",
@@ -26,12 +42,64 @@ export default {
       });
     }
 
-    // MCP Server routing (JSON-RPC 2.0 and tool discovery)
+    // 3. MCP Server routing (JSON-RPC 2.0 and tool discovery)
     if (url.pathname === "/mcp" || url.pathname === "/api/mcp" || url.pathname === "/mcp/sse") {
       return handleMcpRequest(request, env);
     }
 
-    // Task coordinator routing
+    // 4. Human Summary Generation & Validation
+    if (url.pathname === "/api/summary/generate" && request.method === "POST") {
+      const body = await request.json() as any;
+      const result = await generateHumanSummary({
+        ...body,
+        aiGatewayToken: env.AI_GATEWAY_TOKEN,
+        accountId: env.ACCOUNT_ID
+      });
+      return Response.json(result);
+    }
+
+    if (url.pathname === "/api/summary/validate" && request.method === "POST") {
+      const body = await request.json() as any;
+      const result = validateHumanSummary(body.summary || "");
+      return Response.json(result);
+    }
+
+    // 5. Four UI Views Aggregation Endpoints
+    if (url.pathname === "/api/inbox" && request.method === "GET") {
+      const id = env.TASK_COORDINATOR.idFromName("M4-review");
+      const stub = env.TASK_COORDINATOR.get(id) as any;
+      const inbox = await stub.getInbox();
+      return Response.json(inbox);
+    }
+
+    if (url.pathname.startsWith("/api/views/task/") && request.method === "GET") {
+      const taskId = url.pathname.split("/")[4];
+      if (!taskId) return Response.json({ error: "taskId is required" }, { status: 400 });
+      const id = env.TASK_COORDINATOR.idFromName(taskId);
+      const stub = env.TASK_COORDINATOR.get(id) as any;
+      const view = await stub.getTaskView(taskId);
+      if (!view) return Response.json({ error: "Task view not found" }, { status: 404 });
+      return Response.json(view);
+    }
+
+    if (url.pathname.startsWith("/api/views/change/") && request.method === "GET") {
+      const taskId = url.pathname.split("/")[4];
+      if (!taskId) return Response.json({ error: "taskId is required" }, { status: 400 });
+      const id = env.TASK_COORDINATOR.idFromName(taskId);
+      const stub = env.TASK_COORDINATOR.get(id) as any;
+      const view = await stub.getChangeView(taskId);
+      if (!view) return Response.json({ error: "Change view not found" }, { status: 404 });
+      return Response.json(view);
+    }
+
+    if (url.pathname === "/api/views/landed" && request.method === "GET") {
+      const id = env.MERGE_QUEUE.idFromName("global");
+      const stub = env.MERGE_QUEUE.get(id) as any;
+      const history = await stub.listLandingLog();
+      return Response.json({ history });
+    }
+
+    // 6. Task coordinator routing
     if (url.pathname.startsWith("/api/tasks/")) {
       const parts = url.pathname.split("/").filter(Boolean);
       // /api/tasks/:taskId
@@ -42,6 +110,11 @@ export default {
 
       const id = env.TASK_COORDINATOR.idFromName(taskId);
       const stub = env.TASK_COORDINATOR.get(id) as any;
+
+      // WebSocket Upgrade: /api/tasks/:taskId/ws
+      if (parts[3] === "ws") {
+        return stub.fetch(request);
+      }
 
       if (request.method === "POST" && parts.length === 3) {
         const body = await request.json() as any;
@@ -75,6 +148,19 @@ export default {
         return Response.json(result);
       }
 
+      // /api/tasks/:taskId/matrix
+      if (request.method === "GET" && parts[3] === "matrix") {
+        const matrix = await stub.getConflictMatrix(taskId);
+        return Response.json({ taskId, matrix });
+      }
+
+      // /api/tasks/:taskId/push
+      if (request.method === "POST" && parts[3] === "push") {
+        const body = await request.json() as any;
+        const result = await stub.handlePushEvent(body);
+        return Response.json(result);
+      }
+
       // /api/tasks/:taskId/propose
       if (request.method === "POST" && parts[3] === "propose") {
         const body = await request.json() as any;
@@ -85,7 +171,10 @@ export default {
       // /api/tasks/:taskId/vouch
       if (request.method === "POST" && parts[3] === "vouch") {
         const body = await request.json() as any;
-        const result = await stub.recordVouch(taskId, body.voucherEmail, body.voucherName);
+        const voucherEmail = body.voucherEmail || accessEmail;
+        const voucherName = body.voucherName || voucherEmail.split("@")[0];
+
+        const result = await stub.recordVouch(taskId, voucherEmail, voucherName);
 
         let queueResult: any = null;
         if (env.MERGE_QUEUE) {
@@ -99,7 +188,7 @@ export default {
                 attemptId: proposal.attempt_id,
                 changeId: proposal.proposal_id,
                 commitSha: proposal.commit_sha,
-                vouchedBy: `${body.voucherName} <${body.voucherEmail}>`,
+                vouchedBy: `${voucherName} <${voucherEmail}>`,
                 autoProcess: true
               });
               await stub.recordLanding(taskId);
@@ -140,7 +229,7 @@ export default {
       }
     }
 
-    // Session context pack routing
+    // 7. Session context pack routing
     if (url.pathname.startsWith("/api/sessions/")) {
       const parts = url.pathname.split("/").filter(Boolean);
       // /api/sessions/:taskId/:attemptId/:sessionId
@@ -192,7 +281,7 @@ export default {
       }
     }
 
-    // Merge queue routing
+    // 8. Merge queue routing
     if (url.pathname === "/api/queue" && request.method === "GET") {
       const id = env.MERGE_QUEUE.idFromName("global");
       const stub = env.MERGE_QUEUE.get(id) as any;

@@ -1,29 +1,26 @@
 {
-  "taskId": "M2-land",
+  "taskId": "M4-review",
   "attemptId": "att-1",
-  "sessionId": "dccc7a96-977c-4a8c-a6bb-ba9b55389a4e",
+  "sessionId": "7ed6cff5-226b-4e4b-8cd3-459e6606cdfd",
   "leasedPaths": [
+    "src/control-plane/*",
     "src/durable-objects/*",
-    "src/control-plane/*"
+    "src/summary/*",
+    "src/ui/*",
+    "src/mirror/*"
   ],
   "activePlan": [
-    "1. Implement MergeQueue Durable Object with SQLite schema (queue, landing_log, trunk_locks)",
-    "2. Implement Git 2.56 server-side plumbing (in-memory conflict detection via merge-tree, linearization via replay --linearize, test verification)",
-    "3. Implement CAS atomic landing loop with contention retries, SSH provenance signing, and attempt restacking",
-    "4. Connect MergeQueue in control plane Worker (/api/queue, /api/queue/history, auto-queue on vouch)",
-    "5. Add comprehensive unit tests verifying queue ordering, conflict rejection, linearization, CAS retries, and restacking",
-    "6. Deploy and verify on live Cloudflare Workers edge"
+    "1. Task M4.1: Real-time Push Conflict Matrix Engine - Wire Artifacts push queue consumer (cf.artifacts.repo.pushed) in mirror/queue handler to calculate git merge-tree conflict matrix across attempts and broadcast updates via WebSocket/SSE.",
+    "2. Task M4.2: Human Summary Generator (Manifesto Compliant) - Implement summary worker calling AI Gateway Auto Router (cloudflare/auto) with diff and evidence, strictly enforcing 5-line template, <=80 words, and mandatory non-empty 'Not verified' line.",
+    "3. Task M4.3: Four UI Views (Inbox, Task, Change, Landed) - Build ultra-fast keyboard-first SPA with full keyboard navigation (j/k, v for vouch, e for escalate), zero clutter (no raw SHAs/branches), and Access email vouching.",
+    "4. Comprehensive unit test suites covering conflict matrix calculation, human summary generator & validator, UI routing and API endpoints.",
+    "5. Deploy and verify live on Cloudflare Workers edge."
   ],
   "progressNotes": [
-    "Task M2-land claimed on live control plane, isolated fork berth-M2-land-att-1 provisioned.",
-    "Leases granted for src/durable-objects/* and src/control-plane/*.",
-    "MergeQueue Durable Object implemented with SQLite schema, in-memory Git 2.56 plumbing, CAS landing loop, and attempt restacking.",
-    "Control plane Worker wired with /api/queue, /api/queue/history, and auto-enqueue on task vouching.",
-    "All 26 unit tests passing across control plane, durable objects, and MCP router.",
-    "Deployed to live Cloudflare Workers edge (Version ID: 1226662e-0b73-47dd-9c75-c091789ac334).",
-    "Verified end-to-end: task vouched -> enqueued in MergeQueue -> linearized -> preflight tested -> CAS landed on edge.",
-    "Session context pack uploaded to R2 and git notes pushed to Artifacts and GitHub remotes."
+    "Task M4-review created on live control plane, isolated fork berth-M4-review-att-1 provisioned.",
+    "Leases granted for src/control-plane/*, src/durable-objects/*, src/summary/*, src/ui/*, src/mirror/*.",
+    "Branch attempt/M4-review-att-1 created."
   ],
-  "budgetUsedUsd": 0.45,
-  "tokensUsed": 1850
+  "budgetUsedUsd": 0.00,
+  "tokensUsed": 0
 }

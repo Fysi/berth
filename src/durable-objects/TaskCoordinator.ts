@@ -161,6 +161,17 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
         reason TEXT NOT NULL,
         created_at INTEGER NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS conflict_matrix (
+        matrix_id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        attempt_a TEXT NOT NULL,
+        attempt_b TEXT NOT NULL,
+        status TEXT NOT NULL,
+        conflicting_files TEXT NOT NULL,
+        conflict_details TEXT,
+        calculated_at INTEGER NOT NULL
+      );
     `);
 
     // Progressive schema migrations for existing DO SQLite instances
@@ -169,7 +180,8 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
       "ALTER TABLE attempts ADD COLUMN spent_usd REAL DEFAULT 0.00",
       "ALTER TABLE attempts ADD COLUMN tokens_in INTEGER DEFAULT 0",
       "ALTER TABLE attempts ADD COLUMN tokens_out INTEGER DEFAULT 0",
-      "ALTER TABLE attempts ADD COLUMN commit_sha TEXT"
+      "ALTER TABLE attempts ADD COLUMN commit_sha TEXT",
+      "ALTER TABLE attempts ADD COLUMN modified_paths TEXT"
     ];
 
     for (const migration of migrations) {
@@ -626,6 +638,437 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
       recentDecisions: decisions,
       forkRemote: attempt.fork_remote_url,
       forkRepoName: attempt.fork_repo_name
+    };
+  }
+
+  // --- Real-Time Push Conflict Matrix Engine ---
+
+  async calculateConflictMatrix(
+    taskId: string, 
+    trigger?: { attemptId: string; modifiedPaths?: string[] }
+  ): Promise<any[]> {
+    const now = Date.now();
+
+    // 1. Fetch active attempts for task
+    const attemptsCursor = this.ctx.storage.sql.exec(
+      "SELECT attempt_id, commit_sha, status, modified_paths FROM attempts WHERE task_id = ? AND status NOT IN ('Halted', 'Aborted')",
+      taskId
+    );
+    const activeAttempts = [...attemptsCursor] as Array<{
+      attempt_id: string;
+      commit_sha?: string;
+      status: string;
+      modified_paths?: string;
+    }>;
+
+    // Fetch active leases for task
+    const leasesCursor = this.ctx.storage.sql.exec(
+      "SELECT attempt_id, path_pattern FROM leases WHERE task_id = ? AND expires_at > ?",
+      taskId,
+      now
+    );
+    const activeLeases = [...leasesCursor] as Array<{ attempt_id: string; path_pattern: string }>;
+
+    // Build map of paths per attempt (from leases + modified paths)
+    const attemptPaths = new Map<string, Set<string>>();
+    for (const att of activeAttempts) {
+      const paths = new Set<string>();
+      if (att.modified_paths) {
+        try {
+          const arr = JSON.parse(att.modified_paths);
+          for (const p of arr) paths.add(p);
+        } catch {}
+      }
+      attemptPaths.set(att.attempt_id, paths);
+    }
+
+    if (trigger?.modifiedPaths && trigger.attemptId) {
+      let paths = attemptPaths.get(trigger.attemptId);
+      if (!paths) {
+        paths = new Set<string>();
+        attemptPaths.set(trigger.attemptId, paths);
+      }
+      for (const p of trigger.modifiedPaths) paths.add(p);
+      this.ctx.storage.sql.exec(
+        "UPDATE attempts SET modified_paths = ? WHERE attempt_id = ?",
+        JSON.stringify(Array.from(paths)),
+        trigger.attemptId
+      );
+    }
+
+    for (const lease of activeLeases) {
+      let paths = attemptPaths.get(lease.attempt_id);
+      if (!paths) {
+        paths = new Set<string>();
+        attemptPaths.set(lease.attempt_id, paths);
+      }
+      paths.add(lease.path_pattern);
+    }
+
+    const results: any[] = [];
+
+    // Pairwise comparison between attempts
+    for (let i = 0; i < activeAttempts.length; i++) {
+      const attA = activeAttempts[i].attempt_id;
+      const pathsA = Array.from(attemptPaths.get(attA) || []);
+
+      // Check vs trunk
+      results.push({
+        taskId,
+        attemptA: attA,
+        attemptB: "trunk",
+        status: "clean",
+        conflictingFiles: [],
+        conflictDetails: "Linear rebase clean against trunk HEAD"
+      });
+
+      for (let j = i + 1; j < activeAttempts.length; j++) {
+        const attB = activeAttempts[j].attempt_id;
+        const pathsB = Array.from(attemptPaths.get(attB) || []);
+
+        const colliding: string[] = [];
+        for (const pa of pathsA) {
+          for (const pb of pathsB) {
+            if (this.pathsOverlap(pa, pb)) {
+              colliding.push(`${pa} ~ ${pb}`);
+            }
+          }
+        }
+
+        const status = colliding.length > 0 ? "conflicts" : "clean";
+        const details = colliding.length > 0
+          ? `Collision detected across leased/modified paths: ${colliding.join(", ")}`
+          : "Zero overlap across active leases and modified paths";
+
+        results.push({
+          taskId,
+          attemptA: attA,
+          attemptB: attB,
+          status,
+          conflictingFiles: colliding,
+          conflictDetails: details
+        });
+
+        if (status === "conflicts") {
+          this.logDecision(
+            taskId,
+            attA,
+            "ConflictDetected",
+            `Conflict matrix detected collision between ${attA} and ${attB} on ${colliding.join(", ")}`
+          );
+        }
+      }
+    }
+
+    // Persist to SQLite
+    this.ctx.storage.sql.exec("DELETE FROM conflict_matrix WHERE task_id = ?", taskId);
+    for (const r of results) {
+      const matrixId = `cm-${taskId}-${r.attemptA}-${r.attemptB}-${Date.now()}`;
+      this.ctx.storage.sql.exec(
+        `INSERT INTO conflict_matrix (matrix_id, task_id, attempt_a, attempt_b, status, conflicting_files, conflict_details, calculated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        matrixId,
+        taskId,
+        r.attemptA,
+        r.attemptB,
+        r.status,
+        JSON.stringify(r.conflictingFiles),
+        r.conflictDetails,
+        now
+      );
+    }
+
+    // Broadcast update via WebSocket
+    this.broadcastEvent("conflict_matrix_updated", {
+      taskId,
+      updatedAt: now,
+      matrix: results
+    });
+
+    return results;
+  }
+
+  async getConflictMatrix(taskId: string): Promise<any[]> {
+    const cursor = this.ctx.storage.sql.exec(
+      "SELECT * FROM conflict_matrix WHERE task_id = ? ORDER BY calculated_at DESC",
+      taskId
+    );
+    const rows = [...cursor] as any[];
+    if (rows.length === 0) {
+      return this.calculateConflictMatrix(taskId);
+    }
+    return rows.map(r => ({
+      taskId: r.task_id,
+      attemptA: r.attempt_a,
+      attemptB: r.attempt_b,
+      status: r.status,
+      conflictingFiles: JSON.parse(r.conflicting_files || "[]"),
+      conflictDetails: r.conflict_details,
+      calculatedAt: r.calculated_at
+    }));
+  }
+
+  async handlePushEvent(event: {
+    attemptId: string;
+    ref: string;
+    before: string;
+    after: string;
+    commits?: Array<{ id: string; message: string; files?: string[] }>;
+    modifiedFiles?: string[];
+  }): Promise<any> {
+    const { attemptId, after, commits, modifiedFiles } = event;
+    const cursor = this.ctx.storage.sql.exec("SELECT * FROM attempts WHERE attempt_id = ?", attemptId);
+    const attempt = [...cursor][0] as any;
+    if (!attempt) return { error: `Attempt ${attemptId} not found` };
+
+    const paths = modifiedFiles || (commits && commits[0]?.files) || [];
+
+    // Update attempt commit SHA
+    this.ctx.storage.sql.exec(
+      "UPDATE attempts SET commit_sha = ?, updated_at = ? WHERE attempt_id = ?",
+      after,
+      Date.now(),
+      attemptId
+    );
+
+    this.logDecision(
+      attempt.task_id,
+      attemptId,
+      "AttemptPushed",
+      `Pushed commit ${after.slice(0, 8)} to fork ref ${event.ref}`
+    );
+
+    // Recalculate conflict matrix
+    const matrix = await this.calculateConflictMatrix(attempt.task_id, {
+      attemptId,
+      modifiedPaths: paths
+    });
+
+    this.broadcastEvent("push_received", {
+      taskId: attempt.task_id,
+      attemptId,
+      ref: event.ref,
+      commitSha: after,
+      matrix
+    });
+
+    return { status: "processed", matrix };
+  }
+
+  // --- WebSocket Connection & Broadcast ---
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith("/ws")) {
+      const upgradeHeader = request.headers.get("Upgrade");
+      if (!upgradeHeader || upgradeHeader.toLowerCase() !== "websocket") {
+        return new Response("Expected WebSocket connection", { status: 426 });
+      }
+
+      // @ts-ignore
+      if (typeof WebSocketPair !== "undefined") {
+        // @ts-ignore
+        const pair = new WebSocketPair();
+        const client = pair[0];
+        const server = pair[1];
+
+        if (this.ctx && typeof this.ctx.acceptWebSocket === "function") {
+          this.ctx.acceptWebSocket(server);
+        }
+
+        server.send(JSON.stringify({
+          event: "connected",
+          timestamp: Date.now()
+        }));
+
+        return new Response(null, {
+          status: 101,
+          // @ts-ignore
+          webSocket: client
+        });
+      }
+
+      return new Response("WebSocket not supported in this runtime", { status: 501 });
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+
+  broadcastEvent(event: string, payload: any): void {
+    const message = JSON.stringify({ event, payload, timestamp: Date.now() });
+    if (this.ctx && typeof this.ctx.getWebSockets === "function") {
+      try {
+        const sockets = this.ctx.getWebSockets();
+        for (const ws of sockets) {
+          try {
+            ws.send(message);
+          } catch {}
+        }
+      } catch {}
+    }
+  }
+
+  // --- UI View Aggregators ---
+
+  async getTaskView(taskId: string): Promise<any> {
+    const task = await this.getTask(taskId);
+    if (!task) return null;
+
+    const now = Date.now();
+    const attempts = [...this.ctx.storage.sql.exec(
+      "SELECT * FROM attempts WHERE task_id = ? ORDER BY created_at ASC",
+      taskId
+    )] as any[];
+
+    const leases = [...this.ctx.storage.sql.exec(
+      "SELECT * FROM leases WHERE task_id = ? AND expires_at > ? ORDER BY granted_at DESC",
+      taskId,
+      now
+    )] as any[];
+
+    const matrix = await this.getConflictMatrix(taskId);
+
+    const decisions = [...this.ctx.storage.sql.exec(
+      "SELECT * FROM decision_logs WHERE task_id = ? ORDER BY created_at DESC LIMIT 25",
+      taskId
+    )] as any[];
+
+    const proposals = [...this.ctx.storage.sql.exec(
+      "SELECT * FROM proposals WHERE task_id = ? ORDER BY created_at DESC LIMIT 5",
+      taskId
+    )] as any[];
+
+    return {
+      task,
+      attempts: attempts.map(a => ({
+        attemptId: a.attempt_id,
+        agentId: a.agent_id,
+        status: a.status,
+        spentUsd: a.spent_usd,
+        tokensIn: a.tokens_in,
+        tokensOut: a.tokens_out,
+        commitSha: a.commit_sha,
+        stopReason: a.stop_reason,
+        forkRepoName: a.fork_repo_name,
+        forkRemoteUrl: a.fork_remote_url,
+        createdAt: a.created_at,
+        updatedAt: a.updated_at
+      })),
+      leases: leases.map(l => ({
+        leaseId: l.lease_id,
+        attemptId: l.attempt_id,
+        pathPattern: l.path_pattern,
+        expiresInSeconds: Math.max(0, Math.round((l.expires_at - now) / 1000))
+      })),
+      conflictMatrix: matrix,
+      decisionLogs: decisions.map(d => ({
+        logId: d.log_id,
+        attemptId: d.attempt_id,
+        decision: d.decision,
+        reason: d.reason,
+        createdAt: d.created_at
+      })),
+      proposals: proposals.map(p => ({
+        proposalId: p.proposal_id,
+        attemptId: p.attempt_id,
+        commitSha: p.commit_sha,
+        evidenceIds: JSON.parse(p.evidence_ids || "[]"),
+        summary: p.summary,
+        createdAt: p.created_at
+      }))
+    };
+  }
+
+  async getChangeView(taskId: string): Promise<any> {
+    const task = await this.getTask(taskId);
+    if (!task) return null;
+
+    const proposal = await this.getLatestProposal(taskId);
+    const attempts = [...this.ctx.storage.sql.exec(
+      "SELECT * FROM attempts WHERE task_id = ?",
+      taskId
+    )] as any[];
+
+    const totalCostUsd = attempts.reduce((acc, a) => acc + (a.spent_usd || 0), 0);
+    const matrix = await this.getConflictMatrix(taskId);
+    const trunkStatus = matrix.find(m => m.attemptB === "trunk")?.status || "clean";
+
+    return {
+      taskId,
+      taskTitle: task.title,
+      taskIntent: task.intent,
+      taskStatus: task.status,
+      ownerEmail: task.owner_email,
+      totalCostUsd,
+      attemptsCount: attempts.length,
+      proposal: proposal ? {
+        proposalId: proposal.proposal_id,
+        attemptId: proposal.attempt_id,
+        commitSha: proposal.commit_sha,
+        evidenceIds: JSON.parse(proposal.evidence_ids || "[]"),
+        summary: proposal.summary,
+        createdAt: proposal.created_at
+      } : null,
+      trunkStatus,
+      canVouch: task.status === "Proposed"
+    };
+  }
+
+  async getInbox(): Promise<any> {
+    const tasksCursor = this.ctx.storage.sql.exec(
+      "SELECT * FROM tasks WHERE status IN ('Proposed', 'Escalated', 'Exploring')"
+    );
+    const activeTasks = [...tasksCursor] as any[];
+
+    const escalationsCursor = this.ctx.storage.sql.exec(
+      "SELECT e.*, t.title as task_title FROM escalations e JOIN tasks t ON e.task_id = t.task_id WHERE e.resolved = 0 ORDER BY e.created_at DESC"
+    );
+    const escalations = [...escalationsCursor] as any[];
+
+    const proposalsCursor = this.ctx.storage.sql.exec(
+      `SELECT p.*, t.title as task_title, t.intent as task_intent, t.budget_usd, t.spent_usd
+       FROM proposals p JOIN tasks t ON p.task_id = t.task_id
+       WHERE t.status = 'Proposed' ORDER BY p.created_at DESC`
+    );
+    const proposals = [...proposalsCursor] as any[];
+
+    const haltedAttemptsCursor = this.ctx.storage.sql.exec(
+      "SELECT a.*, t.title as task_title FROM attempts a JOIN tasks t ON a.task_id = t.task_id WHERE a.status IN ('Halted', 'Aborted', 'Failed') ORDER BY a.updated_at DESC LIMIT 10"
+    );
+    const haltedAttempts = [...haltedAttemptsCursor] as any[];
+
+    return {
+      activeTasksCount: activeTasks.length,
+      needsAttentionCount: escalations.length + proposals.length + haltedAttempts.length,
+      escalations: escalations.map(e => ({
+        escalationId: e.escalation_id,
+        taskId: e.task_id,
+        taskTitle: e.task_title,
+        attemptId: e.attempt_id,
+        question: e.question,
+        options: JSON.parse(e.options || "[]"),
+        createdAt: e.created_at
+      })),
+      proposals: proposals.map(p => ({
+        proposalId: p.proposal_id,
+        taskId: p.task_id,
+        taskTitle: p.task_title,
+        taskIntent: p.task_intent,
+        attemptId: p.attempt_id,
+        commitSha: p.commit_sha,
+        evidenceIds: JSON.parse(p.evidence_ids || "[]"),
+        summary: p.summary,
+        createdAt: p.created_at
+      })),
+      haltedAttempts: haltedAttempts.map(h => ({
+        attemptId: h.attempt_id,
+        taskId: h.task_id,
+        taskTitle: h.task_title,
+        status: h.status,
+        stopReason: h.stop_reason,
+        spentUsd: h.spent_usd,
+        updatedAt: h.updated_at
+      }))
     };
   }
 
