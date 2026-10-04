@@ -1,0 +1,3 @@
+#!/bin/sh
+# Berth Git Commit-Msg Hook
+node --experimental-strip-types scripts/validate-commit.js "$1"

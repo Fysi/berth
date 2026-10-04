@@ -7,6 +7,7 @@ export interface Env {
   ARTIFACTS: any;
   TASK_COORDINATOR: DurableObjectNamespace;
   MERGE_QUEUE: DurableObjectNamespace;
+  SESSIONS_BUCKET?: R2Bucket;
 }
 
 export default {
@@ -56,6 +57,58 @@ export default {
         const body = await request.json() as any;
         const result = await stub.claimAttempt(taskId, body.agentName || "agent");
         return Response.json(result);
+      }
+    }
+
+    // Session context pack routing
+    if (url.pathname.startsWith("/api/sessions/")) {
+      const parts = url.pathname.split("/").filter(Boolean);
+      // /api/sessions/:taskId/:attemptId/:sessionId
+      const taskId = parts[2];
+      const attemptId = parts[3];
+      const sessionId = parts[4];
+
+      if (!taskId || !attemptId || !sessionId) {
+        return Response.json({ error: "taskId, attemptId, and sessionId are required" }, { status: 400 });
+      }
+
+      const key = `berth-sessions/${taskId}/${attemptId}/${sessionId}.jsonl`;
+
+      if (request.method === "PUT") {
+        if (!env.SESSIONS_BUCKET) {
+          return Response.json({ error: "SESSIONS_BUCKET not configured" }, { status: 500 });
+        }
+        const body = await request.text();
+        await env.SESSIONS_BUCKET.put(key, body, {
+          httpMetadata: { contentType: "application/x-ndjson" },
+          customMetadata: {
+            taskId,
+            attemptId,
+            sessionId,
+            uploadedAt: new Date().toISOString()
+          }
+        });
+        return Response.json({
+          status: "uploaded",
+          key,
+          url: `${url.origin}/api/sessions/${taskId}/${attemptId}/${sessionId}`
+        });
+      }
+
+      if (request.method === "GET") {
+        if (!env.SESSIONS_BUCKET) {
+          return Response.json({ error: "SESSIONS_BUCKET not configured" }, { status: 500 });
+        }
+        const obj = await env.SESSIONS_BUCKET.get(key);
+        if (!obj) {
+          return Response.json({ error: "Session not found" }, { status: 404 });
+        }
+        return new Response(obj.body, {
+          headers: {
+            "Content-Type": "application/x-ndjson",
+            "Cache-Control": "public, max-age=31536000, immutable"
+          }
+        });
       }
     }
 

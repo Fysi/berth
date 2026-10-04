@@ -11,7 +11,8 @@
     "bootstrap": "node --experimental-strip-types scripts/bootstrap-infra.ts",
     "deploy": "wrangler deploy",
     "deploy:mirror": "wrangler deploy --config wrangler.mirror.jsonc",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "capture": "node --experimental-strip-types scripts/capture-session.ts"
   },
   "keywords": [
     "git",

@@ -1,0 +1,18 @@
+{
+  "taskId": "M1.1-trailer-hooks-and-session-capture",
+  "attemptId": "att-1",
+  "sessionId": "8a3ea29d-93ff-4056-a465-8adc883467dd",
+  "activePlan": [
+    "1. Complete Milestone M0 (Verified: Artifacts repo berth, push queue, Workers deployed, sync tested)",
+    "2. Implement Task M1.1: Git trailers enforcement and conflict marker blocker",
+    "3. Implement Task M1.2: Session context pack capture to R2 and git notes on refs/notes/agent-session",
+    "4. Implement Task M1.3: AGENTS.md rules verification and integration tests"
+  ],
+  "progressNotes": [
+    "Milestone M0 achieved and verified live on Cloudflare Workers and Artifacts Git remote.",
+    "R2 bucket berth-sessions created.",
+    "Advancing into Milestone M1: Record."
+  ],
+  "budgetUsedUsd": 0.0,
+  "tokensUsed": 0
+}

@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/validate-commit.js",
+            "command": "node --experimental-strip-types scripts/validate-commit.js",
             "timeout": 15
           }
         ]

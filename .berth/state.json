@@ -1,11 +1,11 @@
 {
   "activeMilestone": "M1",
   "milestoneTitle": "Record (Session Context & Commit Trailers)",
-  "headSha": "63f083c",
-  "lastCommit": "docs: structure documentation using Diataxis framework and add doc-auditor agent",
+  "headSha": "6683d6c",
+  "lastCommit": "feat(record): enforce commit trailers, conflict marker protection, and session context packs in R2",
   "githubMirror": "https://github.com/Fysi/berth",
   "activeForks": [],
-  "currentTask": "M1.1-trailer-hooks-and-session-capture",
-  "nextStep": "Implement session context pack export and verify trailer enforcement on attempt commits",
-  "lastUpdated": "2026-10-04T14:40:00.000Z"
+  "currentTask": "M1-complete-ready-for-M3-attempts",
+  "nextStep": "Execute Milestone M3 (Attempts: TaskCoordinator DO, ephemeral Artifacts forks, ctx.container sandboxes)",
+  "lastUpdated": "2026-10-04T14:44:44.131Z"
 }
