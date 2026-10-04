@@ -1,14 +1,13 @@
 {
-  "activeMilestone": "M3",
-  "milestoneTitle": "Attempts (TaskCoordinator, Leases, & MCP Server)",
-  "headSha": "3152622",
-  "lastCommit": "feat(record): enforce commit trailers, conflict marker protection, and session context packs in R2",
+  "activeMilestone": "M5",
+  "milestoneTitle": "Close the Loop (Container Snapshots, AI Gateway Cost Attribution, Production Issues Loop)",
+  "headSha": "f5ac25b",
+  "lastCommit": "feat(review): implement push conflict matrix, human summary generator, and 4 UI views",
   "githubMirror": "https://github.com/Fysi/berth",
   "activeForks": [
-    "berth-M3-attempts-att-1",
-    "berth-M3-attempts-att-2"
+    "berth-M4-review-att-1"
   ],
-  "currentTask": "M3.1-task-coordinator-and-mcp-server",
-  "nextStep": "Propose att-1 change via MCP server and wire MergeQueue linearization",
-  "lastUpdated": "2026-10-04T15:45:00.000Z"
+  "currentTask": "M5.1-container-snapshots-and-rapid-boot",
+  "nextStep": "Implement container snapshots (snapshotContainer) for <=2s attempt boots and AI Gateway cost attribution",
+  "lastUpdated": "2026-10-04T18:09:30.000Z"
 }

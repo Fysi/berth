@@ -19,8 +19,16 @@
   "progressNotes": [
     "Task M4-review created on live control plane, isolated fork berth-M4-review-att-1 provisioned.",
     "Leases granted for src/control-plane/*, src/durable-objects/*, src/summary/*, src/ui/*, src/mirror/*.",
-    "Branch attempt/M4-review-att-1 created."
+    "Implemented real-time push conflict matrix in TaskCoordinator with pairwise lease and commit collision checks.",
+    "Implemented cf.artifacts.repo.pushed queue consumer in src/mirror/index.ts dispatching push events to TaskCoordinator.",
+    "Implemented manifesto-compliant 5-line human summary validator and generator (<=80 words, mandatory Not verified, cost breakdown).",
+    "Implemented ultra-fast keyboard-first review dashboard (Inbox, Task, Change, Landed views) with WebSocket live streaming.",
+    "Wired Cloudflare Access authenticated email vouching with auto-enqueuing into MergeQueue.",
+    "All 39 unit tests passing across all test suites.",
+    "Deployed to live Cloudflare Workers edge (Version ID: 0ebd6d0e-f54d-4ee4-abc5-23533ba494dc).",
+    "Verified end-to-end: proposal created -> surfaced in Inbox -> vouched with Access attribution -> processed and Landed in MergeQueue.",
+    "Session context pack uploaded to R2 and git notes pushed to Artifacts and GitHub remotes."
   ],
-  "budgetUsedUsd": 0.00,
-  "tokensUsed": 0
+  "budgetUsedUsd": 0.55,
+  "tokensUsed": 2100
 }
