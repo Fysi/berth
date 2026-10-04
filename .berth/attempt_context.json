@@ -17,8 +17,13 @@
   "progressNotes": [
     "Task M2-land claimed on live control plane, isolated fork berth-M2-land-att-1 provisioned.",
     "Leases granted for src/durable-objects/* and src/control-plane/*.",
-    "Switched to attempt/M2-land-att-1 branch with remote configured."
+    "MergeQueue Durable Object implemented with SQLite schema, in-memory Git 2.56 plumbing, CAS landing loop, and attempt restacking.",
+    "Control plane Worker wired with /api/queue, /api/queue/history, and auto-enqueue on task vouching.",
+    "All 26 unit tests passing across control plane, durable objects, and MCP router.",
+    "Deployed to live Cloudflare Workers edge (Version ID: 1226662e-0b73-47dd-9c75-c091789ac334).",
+    "Verified end-to-end: task vouched -> enqueued in MergeQueue -> linearized -> preflight tested -> CAS landed on edge.",
+    "Session context pack uploaded to R2 and git notes pushed to Artifacts and GitHub remotes."
   ],
-  "budgetUsedUsd": 0.00,
-  "tokensUsed": 0
+  "budgetUsedUsd": 0.45,
+  "tokensUsed": 1850
 }

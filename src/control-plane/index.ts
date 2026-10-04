@@ -223,6 +223,15 @@ export default {
       return Response.json({ status: "processed", queue });
     }
 
+    if (url.pathname.startsWith("/api/queue/") && url.pathname.endsWith("/retry") && request.method === "POST") {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const entryId = parts[2];
+      const id = env.MERGE_QUEUE.idFromName("global");
+      const stub = env.MERGE_QUEUE.get(id) as any;
+      const result = await stub.retryEntry(entryId);
+      return Response.json(result);
+    }
+
     return Response.json({ error: "Endpoint not found" }, { status: 404 });
   }
 };

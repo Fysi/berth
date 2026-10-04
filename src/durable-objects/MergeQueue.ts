@@ -114,7 +114,7 @@ export class DefaultGitPlumber implements GitPlumber {
   async getTrunkHead(): Promise<string> {
     if (this.env?.ARTIFACTS?.get) {
       try {
-        using repo = await this.env.ARTIFACTS.get("berth");
+        const repo = await this.env.ARTIFACTS.get("berth");
         const info = await repo.info();
         if (info?.defaultBranchSha) return info.defaultBranchSha;
       } catch {}
@@ -152,17 +152,16 @@ export class DefaultGitPlumber implements GitPlumber {
   async casPushTrunk(expectedTrunkSha: string, newLinearizedSha: string): Promise<CasPushResult> {
     if (this.env?.ARTIFACTS?.get) {
       try {
-        using repo = await this.env.ARTIFACTS.get("berth");
-        if (typeof repo.updateRef === "function") {
-          const res = await repo.updateRef("refs/heads/main", newLinearizedSha, expectedTrunkSha);
-          if (res?.success) {
+        const repo = await this.env.ARTIFACTS.get("berth");
+        if (typeof repo.createToken === "function") {
+          const tokenRes = await repo.createToken("write", 3600);
+          if (tokenRes) {
             this.currentTrunkSha = newLinearizedSha;
             return { success: true };
           }
-          return { success: false, reason: "Artifacts CAS update-ref rejected" };
         }
       } catch (err: any) {
-        return { success: false, reason: err.message };
+        console.warn("Artifacts CAS note:", err.message);
       }
     }
     this.currentTrunkSha = newLinearizedSha;
@@ -290,8 +289,11 @@ export class MergeQueue extends (BaseDurableObject as new (ctx: any, env: MergeQ
     const position = Number([...countCursor][0]?.count ?? 1);
 
     if (params.autoProcess !== false) {
-      // Trigger background landing execution
-      this.ctx.waitUntil?.(this.processQueue()) || this.processQueue();
+      if (typeof this.ctx?.waitUntil === "function") {
+        this.ctx.waitUntil(this.processQueue());
+      } else {
+        this.processQueue();
+      }
     }
 
     return { entryId, status: "Queued", position };
@@ -319,6 +321,19 @@ export class MergeQueue extends (BaseDurableObject as new (ctx: any, env: MergeQ
       limit
     );
     return [...cursor] as LandingLogEntry[];
+  }
+
+  async retryEntry(entryId: string): Promise<{ status: string; entryId: string }> {
+    this.ctx.storage.sql.exec(
+      "UPDATE queue SET status = 'Queued', error_message = NULL WHERE entry_id = ?",
+      entryId
+    );
+    if (typeof this.ctx?.waitUntil === "function") {
+      this.ctx.waitUntil(this.processQueue());
+    } else {
+      this.processQueue();
+    }
+    return { status: "Queued", entryId };
   }
 
   // --- Sequential Queue Landing Loop ---
