@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../components.css"><title>HumanRecord</title><style>html,body{margin:0}body{padding:16px}.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}.stack{display:grid;gap:16px}</style></head>
+<body class="bt-page" style="background:var(--concrete)">
+<article class="bt-record" tabindex="0" aria-labelledby="rec-title">
+  <header class="bt-record__head">
+    <h2 class="bt-record__title" id="rec-title">Stop concurrent landings overwriting each other</h2>
+    <span class="bt-state bt-state--proposed">Proposed</span>
+    <span class="bt-record__count">58/80 words</span>
+  </header>
+  <dl class="bt-record__lines">
+    <dt>Why</dt><dd>Two changes can land at once, and the second silently overwrites the first.</dd>
+    <dt>What changes</dt><dd>The queue checks trunk has not moved before writing, and starts again if it has.</dd>
+    <dt>Look at</dt><dd><code>queue/land.ts</code> lines 41–68. The rest is test setup.</dd>
+    <dt>Verified</dt><dd>3 new race tests pass. 40 simultaneous landings, no lost commits.</dd>
+    <dt class="bt-record__gap">Not verified</dt><dd class="bt-record__gap">What happens if storage fails halfway through a write.</dd>
+    <dt>Cost</dt><dd class="bt-record__cost">$0.84 across 3 attempts</dd>
+  </dl>
+</article>
+</body>
+</html>

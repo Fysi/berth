@@ -1,0 +1,126 @@
+/* Berth components. Plain CSS classes, prefixed bt-. Colours come only from tokens.css. */
+
+.bt-page { background: var(--concrete); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 24px; }
+.bt-page *, .bt-page *::before, .bt-page *::after { box-sizing: border-box; }
+
+/* Focus: one rule for everything */
+.bt-btn:focus-visible, .bt-input:focus-visible, .bt-link:focus-visible, .bt-record:focus-visible, .bt-attempt:focus-visible, .bt-matrix td:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 3px;
+}
+
+/* Label: uppercase Archivo, used by buttons, chips, field labels and table heads */
+.bt-label { font-family: var(--font-display); font-weight: 700; font-size: 12px; line-height: 16px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Button */
+.bt-btn {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 40px; padding: 0 var(--space-4);
+  font-family: var(--font-display); font-weight: 700; font-size: 13px; line-height: 16px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink); background: var(--slab);
+  border: var(--border-rule) solid var(--ink); border-radius: 0;
+  box-shadow: var(--shadow-block); cursor: pointer;
+  transition: transform 60ms linear, box-shadow 60ms linear;
+}
+.bt-btn:hover { background: var(--sunk); }
+.bt-btn:active { transform: translate(3px, 3px); box-shadow: var(--shadow-pressed); }
+.bt-btn--primary { background: var(--quay); color: var(--on-quay); }
+.bt-btn--primary:hover { background: var(--quay); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.bt-btn--danger { background: var(--escalated); color: var(--on-escalated); }
+.bt-btn--danger:hover { background: var(--escalated); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.bt-btn--quiet { box-shadow: none; background: transparent; border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.bt-btn--quiet:hover { background: transparent; border-color: var(--ink); }
+.bt-btn:disabled, .bt-btn[aria-disabled="true"] { background: var(--sunk); color: var(--ink-muted); border-style: dashed; box-shadow: none; cursor: not-allowed; transform: none; text-decoration: none; }
+.bt-btn .bt-kbd { margin-left: var(--space-1); }
+
+/* Key hint */
+.bt-kbd {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px;
+  font-family: var(--font-mono); font-weight: 700; font-size: 12px; line-height: 1; text-transform: none; letter-spacing: 0;
+  color: inherit; background: transparent;
+  border: var(--border-rule) solid currentColor; border-bottom-width: var(--border-heavy);
+}
+
+/* State chip: the fixed lifecycle. The word always carries the meaning; colour and marker repeat it. */
+.bt-state {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 var(--space-2);
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+  color: var(--ink); background: var(--slab); border: var(--border-rule) solid var(--ink);
+}
+.bt-state::before { content: ""; flex: none; width: 10px; height: 10px; border: 2px solid currentColor; background: currentColor; }
+.bt-state--intent::before { background: transparent; }
+.bt-state--exploring { background: var(--harbour); color: var(--on-harbour); }
+.bt-state--exploring::before { background: linear-gradient(to top, currentColor 50%, transparent 50%); }
+.bt-state--proposed { background: var(--quay); color: var(--on-quay); }
+.bt-state--vouched { background: var(--vouched); color: var(--on-vouched); }
+.bt-state--landing { background: var(--buoy); color: var(--on-buoy); }
+.bt-state--landing::before { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 4px); }
+.bt-state--landed { background: var(--landed); color: var(--on-landed); }
+.bt-state--landed::before { width: 6px; height: 10px; border-width: 0 3px 3px 0; background: transparent; transform: rotate(45deg) translate(-1px, -1px); }
+.bt-state--stopped { background: var(--sunk); border-style: dashed; }
+.bt-state--stopped::before { background: transparent; border-style: dashed; }
+.bt-state--escalated { background: var(--escalated); color: var(--on-escalated); }
+.bt-state--escalated::before { content: "!"; width: auto; height: auto; border: 0; background: transparent; font-size: 14px; line-height: 1; }
+
+/* Hazard band: quay-edge marking. Only on the trunk lane and the queue. */
+.bt-hazard { height: 12px; border: var(--border-rule) solid var(--ink); background: repeating-linear-gradient(135deg, var(--ink) 0 8px, var(--quay) 8px 16px); }
+
+/* The human record: the only text a reviewer has to read */
+.bt-record { background: var(--slab); color: var(--ink); border: var(--border-rule) solid var(--ink); box-shadow: var(--shadow-block); max-width: 720px; }
+.bt-record__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: var(--border-rule) solid var(--ink); }
+.bt-record__title { margin: 0; flex: 1 1 240px; min-width: 0; font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 24px; text-wrap: balance; }
+.bt-record__count { font-family: var(--font-mono); font-size: 13px; line-height: 20px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.bt-record__lines { margin: 0; display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); }
+.bt-record__lines dt, .bt-record__lines dd { margin: 0; padding: var(--space-3) var(--space-4); border-bottom: var(--border-hair) solid var(--ink); }
+.bt-record__lines dt { font-family: var(--font-display); font-weight: 700; font-size: 12px; line-height: 24px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.bt-record__lines dd { font-size: 18px; line-height: 28px; min-width: 0; }
+.bt-record__lines > :nth-last-child(-n+2) { border-bottom: 0; }
+.bt-record__lines .bt-record__gap { background: var(--quay); color: var(--on-quay); }
+.bt-record__lines code, .bt-record code { font-family: var(--font-mono); font-size: 15px; overflow-wrap: anywhere; }
+.bt-record__lines .bt-record__cost { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) {
+  .bt-record__lines { grid-template-columns: minmax(0, 1fr); }
+  .bt-record__lines dt { padding-bottom: 0; border-bottom: 0; }
+}
+
+/* Attempt card */
+.bt-attempt { background: var(--slab); color: var(--ink); border: var(--border-rule) solid var(--ink); display: grid; gap: var(--space-3); padding: var(--space-4); min-width: 0; }
+.bt-attempt--active { box-shadow: var(--shadow-block); }
+.bt-attempt--stopped { background: var(--sunk); border-style: dashed; }
+.bt-attempt__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.bt-attempt__name { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 24px; }
+.bt-attempt__agent, .bt-attempt__paths { margin: 0; font-family: var(--font-mono); font-size: 13px; line-height: 20px; color: var(--ink-muted); overflow-wrap: anywhere; }
+.bt-attempt__now { margin: 0; font-size: 16px; line-height: 24px; }
+.bt-meter { display: grid; gap: var(--space-1); }
+.bt-meter__row { display: flex; justify-content: space-between; gap: var(--space-2); font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }
+.bt-meter__track { height: 12px; background: var(--sunk); border: var(--border-rule) solid var(--ink); }
+.bt-meter__fill { height: 100%; background: var(--harbour); }
+.bt-meter--over .bt-meter__fill { background: var(--escalated); }
+.bt-meter--over .bt-meter__row strong { color: var(--danger-text); }
+
+/* Conflict matrix */
+.bt-matrix-wrap { overflow-x: auto; max-width: 100%; }
+.bt-matrix { border-collapse: collapse; font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--slab); }
+.bt-matrix th, .bt-matrix td { border: var(--border-rule) solid var(--ink); padding: var(--space-2) var(--space-3); text-align: left; white-space: nowrap; }
+.bt-matrix thead th { font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--concrete); }
+.bt-matrix tbody th { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.04em; background: var(--concrete); }
+.bt-matrix .is-self { background: var(--sunk); color: var(--ink-muted); }
+.bt-matrix .is-clean { background: var(--slab); }
+.bt-matrix .is-overlap { background: var(--quay); color: var(--on-quay); }
+.bt-matrix .is-conflict { background: var(--escalated); color: var(--on-escalated); font-weight: 700; }
+.bt-matrix th.is-trunk { box-shadow: inset 0 calc(-1 * var(--border-heavy)) 0 0 var(--ink); }
+
+/* Text field */
+.bt-field { display: grid; gap: var(--space-2); max-width: 480px; }
+.bt-field__label { font-family: var(--font-display); font-weight: 700; font-size: 12px; line-height: 16px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); }
+.bt-input { width: 100%; height: 44px; padding: 0 var(--space-3); font: inherit; font-size: 16px; color: var(--ink); background: var(--slab); border: var(--border-rule) solid var(--ink); border-radius: 0; }
+textarea.bt-input { height: auto; min-height: 96px; padding: var(--space-2) var(--space-3); resize: vertical; }
+.bt-input::placeholder { color: var(--ink-muted); opacity: 1; }
+.bt-field__help { font-size: 14px; line-height: 20px; color: var(--ink-muted); margin: 0; }
+.bt-field--error .bt-input { border-color: var(--danger-text); border-width: var(--border-heavy); }
+.bt-field__error { margin: 0; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--danger-text); }
+
+/* Links */
+.bt-link { color: var(--link); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.bt-link:hover { text-decoration-thickness: 4px; }
+
+@media (prefers-reduced-motion: reduce) { .bt-btn { transition: none; } .bt-btn:active { transform: none; } }

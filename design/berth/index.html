@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Berth design system</title>
+<link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css">
+<style>
+body{margin:0;background:var(--concrete);color:var(--ink)}
+.g-wrap{max-width:1040px;margin:0 auto;padding-block:var(--space-8);padding-inline:var(--space-4);display:grid;gap:var(--space-8)}
+.g-top{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap}
+.g-coverbox{width:fit-content;max-width:100%;overflow-x:auto;border:var(--border-rule) solid var(--ink)}
+.cover{width:960px}
+
+  .cover { position:relative; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .quay { fill:var(--quay); }
+  .deep { fill:var(--ink); }
+  .sea { fill:var(--harbour); }
+  .buoy { fill:var(--buoy); }
+  .words { position:absolute; left:var(--space-6); bottom:var(--space-6); max-width:440px; }
+  .name { margin:0; font-family:var(--font-display); font-size:112px; line-height:.9; font-weight:800; letter-spacing:-.02em; color:var(--ink); }
+  .tag { margin:var(--space-2) 0 0 4px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+
+.g-sec{display:grid;gap:var(--space-4);border-top:var(--border-heavy) solid var(--ink);padding-top:var(--space-4);min-width:0}
+.g-h,.g-sum{margin:0}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.stack{display:grid;gap:16px}
+.logo-dark{display:none}
+:root[data-theme="dark"] .logo-light{display:none}
+:root[data-theme="dark"] .logo-dark{display:block}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .logo-light{display:none}:root:not([data-theme="light"]) .logo-dark{display:block}}
+</style></head>
+<body class="bt-page">
+<main class="g-wrap">
+<div class="g-top"><img class="logo-light" src="logos/berth-lockup-on-light.svg" height="40" alt="Berth"><img class="logo-dark" src="logos/berth-lockup-on-dark.svg" height="40" alt="Berth">
+<div class="row"><button class="bt-btn" type="button" id="th-light">Light</button><button class="bt-btn" type="button" id="th-dark">Dark</button><button class="bt-btn bt-btn--quiet" type="button" id="th-system">System</button></div></div>
+<div class="g-coverbox"><div class="cover"><div class="art" aria-hidden="true"><svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      quay 224x192 bled off the top (the brand, largest) · ink 256x128 bled off the top and right · harbour 128x160 to the bottom edge · buoy 128x96 bled off the right: about 42% of 960x288
+  arrangement a flush modular grid with no gutters, the way concrete is poured in bays; every edge on a space-4 (16px) line
+  pattern     stripes, from "loud, bold, poster type" and the quay-edge HazardBand: ink diagonals at a space-4 pitch, 8px wide, in a 32px band cut from under the quay block (16 units)
+  scales      sides are multiples of space-4 and space-8; pitch space-4; corners radius-none (square); name inset space-6
+-->
+<defs><clipPath id="band"><rect x="0" y="192" width="224" height="32"/></clipPath></defs>
+<rect class="quay" x="0" y="0" width="224" height="224"/>
+<g clip-path="url(#band)"><polygon class="deep" points="-32,224 -24,224 8,192 0,192"/><polygon class="deep" points="-16,224 -8,224 24,192 16,192"/><polygon class="deep" points="0,224 8,224 40,192 32,192"/><polygon class="deep" points="16,224 24,224 56,192 48,192"/><polygon class="deep" points="32,224 40,224 72,192 64,192"/><polygon class="deep" points="48,224 56,224 88,192 80,192"/><polygon class="deep" points="64,224 72,224 104,192 96,192"/><polygon class="deep" points="80,224 88,224 120,192 112,192"/><polygon class="deep" points="96,224 104,224 136,192 128,192"/><polygon class="deep" points="112,224 120,224 152,192 144,192"/><polygon class="deep" points="128,224 136,224 168,192 160,192"/><polygon class="deep" points="144,224 152,224 184,192 176,192"/><polygon class="deep" points="160,224 168,224 200,192 192,192"/><polygon class="deep" points="176,224 184,224 216,192 208,192"/><polygon class="deep" points="192,224 200,224 232,192 224,192"/><polygon class="deep" points="208,224 216,224 248,192 240,192"/></g>
+<rect class="deep" x="224" y="0" width="256" height="128"/>
+<rect class="sea" x="224" y="128" width="128" height="160"/>
+<rect class="buoy" x="352" y="128" width="128" height="96"/>
+</svg></div><div class="words"><p class="name">Berth</p><p class="tag">Agents write the code. Humans decide what lands.</p></div></div></div>
+<section class="g-sec" id="AttemptCard"><h2 class="t-heading g-h">AttemptCard</h2><p class="t-body-sm g-sum">One agent&#x27;s try at a task: its state, what it&#x27;s doing now, the paths it has leased, and how much of its budget it has spent. <a class="bt-link" href="components/AttemptCard/README.md">Guidelines</a></p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px">
+  <section class="bt-attempt bt-attempt--active" aria-labelledby="a2">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a2">Attempt 2</h3><span class="bt-state bt-state--proposed">Proposed</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Tests pass. Summary ready for review.</p>
+    <p class="bt-attempt__paths">queue/land.ts, test/queue.race.test.ts</p>
+    <div class="bt-meter"><div class="bt-meter__row"><span>Budget</span><strong>$0.31 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="31% of budget used"><div class="bt-meter__fill" style="width:31%"></div></div></div>
+  </section>
+  <section class="bt-attempt" aria-labelledby="a1">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a1">Attempt 1</h3><span class="bt-state bt-state--exploring">Exploring</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Running 212 tests in the sandbox.</p>
+    <p class="bt-attempt__paths">queue/land.ts</p>
+    <div class="bt-meter"><div class="bt-meter__row"><span>Budget</span><strong>$0.22 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="22% of budget used"><div class="bt-meter__fill" style="width:22%"></div></div></div>
+  </section>
+  <section class="bt-attempt bt-attempt--stopped" aria-labelledby="a3">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a3">Attempt 3</h3><span class="bt-state bt-state--stopped">Stopped</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Stopped by the coordinator: over budget. Building on attempt 2.</p>
+    <p class="bt-attempt__paths">queue/land.ts, queue/retry.ts</p>
+    <div class="bt-meter bt-meter--over"><div class="bt-meter__row"><span>Budget</span><strong>Over: $1.31 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="Over budget: 131%"><div class="bt-meter__fill" style="width:100%"></div></div></div>
+  </section>
+</div>
+</section>
+<section class="g-sec" id="Button"><h2 class="t-heading g-h">Button</h2><p class="t-body-sm g-sum">A square, ink-bordered button that sits on a hard 4px shadow and drops into it when pressed. <a class="bt-link" href="components/Button/README.md">Guidelines</a></p>
+<div class="row">
+  <button class="bt-btn bt-btn--primary" type="button">Vouch and land <span class="bt-kbd">V</span></button>
+  <button class="bt-btn" type="button">Build on this <span class="bt-kbd">B</span></button>
+  <button class="bt-btn bt-btn--danger" type="button">Stop attempt</button>
+  <button class="bt-btn bt-btn--quiet" type="button">Open agent record</button>
+  <button class="bt-btn" type="button" disabled>Land (needs a vouch)</button>
+</div>
+</section>
+<section class="g-sec" id="ConflictMatrix"><h2 class="t-heading g-h">ConflictMatrix</h2><p class="t-body-sm g-sum">Which attempts would conflict with trunk and with each other, recomputed on every push. <a class="bt-link" href="components/ConflictMatrix/README.md">Guidelines</a></p>
+<div class="bt-matrix-wrap">
+<table class="bt-matrix">
+  <caption class="bt-label" style="text-align:left;padding-bottom:8px">Conflicts · updated 12 s after the last push</caption>
+  <thead><tr><th scope="col">Attempt</th><th scope="col" class="is-trunk">Trunk</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Attempt 1</th><td class="is-clean">Clean</td><td class="is-self">—</td><td class="is-overlap">Same lines, merges</td><td class="is-conflict">Conflict · 2 files</td></tr>
+    <tr><th scope="row">Attempt 2</th><td class="is-clean">Clean</td><td class="is-overlap">Same lines, merges</td><td class="is-self">—</td><td class="is-clean">Clean</td></tr>
+    <tr><th scope="row">Attempt 3</th><td class="is-conflict">Conflict · 1 file</td><td class="is-conflict">Conflict · 2 files</td><td class="is-clean">Clean</td><td class="is-self">—</td></tr>
+  </tbody>
+</table>
+</div>
+</section>
+<section class="g-sec" id="HazardBand"><h2 class="t-heading g-h">HazardBand</h2><p class="t-body-sm g-sum">Ink-and-quay diagonal stripes taken from the markings on a quay edge. They mark trunk, the line only the queue crosses. <a class="bt-link" href="components/HazardBand/README.md">Guidelines</a></p>
+<div class="stack">
+  <div class="bt-hazard" role="presentation"></div>
+  <p class="bt-label" style="margin:0">Trunk · only the queue crosses this line</p>
+</div>
+</section>
+<section class="g-sec" id="HumanRecord"><h2 class="t-heading g-h">HumanRecord</h2><p class="t-body-sm g-sum">The five-line, evidence-backed summary of a change, and the only text a reviewer has to read. <a class="bt-link" href="components/HumanRecord/README.md">Guidelines</a></p>
+<article class="bt-record" tabindex="0" aria-labelledby="rec-title">
+  <header class="bt-record__head">
+    <h2 class="bt-record__title" id="rec-title">Stop concurrent landings overwriting each other</h2>
+    <span class="bt-state bt-state--proposed">Proposed</span>
+    <span class="bt-record__count">58/80 words</span>
+  </header>
+  <dl class="bt-record__lines">
+    <dt>Why</dt><dd>Two changes can land at once, and the second silently overwrites the first.</dd>
+    <dt>What changes</dt><dd>The queue checks trunk has not moved before writing, and starts again if it has.</dd>
+    <dt>Look at</dt><dd><code>queue/land.ts</code> lines 41–68. The rest is test setup.</dd>
+    <dt>Verified</dt><dd>3 new race tests pass. 40 simultaneous landings, no lost commits.</dd>
+    <dt class="bt-record__gap">Not verified</dt><dd class="bt-record__gap">What happens if storage fails halfway through a write.</dd>
+    <dt>Cost</dt><dd class="bt-record__cost">$0.84 across 3 attempts</dd>
+  </dl>
+</article>
+</section>
+<section class="g-sec" id="KeyHint"><h2 class="t-heading g-h">KeyHint</h2><p class="t-body-sm g-sum">A key cap for keyboard shortcuts, drawn in the colour of the text around it. <a class="bt-link" href="components/KeyHint/README.md">Guidelines</a></p>
+<p class="row" style="margin:0"><span class="bt-kbd">J</span><span class="bt-kbd">K</span> <span>Next and previous change</span> <span class="bt-kbd">V</span> <span>Vouch</span> <span class="bt-kbd">E</span> <span>Escalate</span> <span class="bt-kbd">?</span> <span>All shortcuts</span></p>
+</section>
+<section class="g-sec" id="StateChip"><h2 class="t-heading g-h">StateChip</h2><p class="t-body-sm g-sum">The fixed lifecycle state of a task or change: Intent, Exploring, Proposed, Vouched, Landing, Landed, or Escalated. <a class="bt-link" href="components/StateChip/README.md">Guidelines</a></p>
+<div class="row">
+  <span class="bt-state bt-state--intent">Intent</span>
+  <span class="bt-state bt-state--exploring">Exploring</span>
+  <span class="bt-state bt-state--proposed">Proposed</span>
+  <span class="bt-state bt-state--vouched">Vouched</span>
+  <span class="bt-state bt-state--landing">Landing</span>
+  <span class="bt-state bt-state--landed">Landed</span>
+  <span class="bt-state bt-state--escalated">Escalated</span>
+</div>
+</section>
+<section class="g-sec" id="TextField"><h2 class="t-heading g-h">TextField</h2><p class="t-body-sm g-sum">A labelled, square input with optional help text and an error state. <a class="bt-link" href="components/TextField/README.md">Guidelines</a></p>
+<form class="stack" onsubmit="event.preventDefault()">
+  <div class="bt-field">
+    <label class="bt-field__label" for="task-what">What should happen</label>
+    <input class="bt-input" id="task-what" value="Show cost on the Landed view">
+    <p class="bt-field__help">Describe the outcome, not the steps. Agents choose the how.</p>
+  </div>
+  <div class="bt-field bt-field--error">
+    <label class="bt-field__label" for="task-budget">Budget</label>
+    <input class="bt-input" id="task-budget" value="$0" aria-invalid="true" aria-describedby="budget-err">
+    <p class="bt-field__error" id="budget-err">Error: a task needs a budget above $0. Try $1.00.</p>
+  </div>
+</form>
+</section>
+</main>
+<script>
+var r = document.documentElement;
+document.getElementById('th-light').onclick = function () { r.setAttribute('data-theme', 'light'); };
+document.getElementById('th-dark').onclick = function () { r.setAttribute('data-theme', 'dark'); };
+document.getElementById('th-system').onclick = function () { r.removeAttribute('data-theme'); };
+</script>
+</body></html>

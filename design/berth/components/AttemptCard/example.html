@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../components.css"><title>AttemptCard</title><style>html,body{margin:0}body{padding:16px}.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}.stack{display:grid;gap:16px}</style></head>
+<body class="bt-page" style="background:var(--concrete)">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px">
+  <section class="bt-attempt bt-attempt--active" aria-labelledby="a2">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a2">Attempt 2</h3><span class="bt-state bt-state--proposed">Proposed</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Tests pass. Summary ready for review.</p>
+    <p class="bt-attempt__paths">queue/land.ts, test/queue.race.test.ts</p>
+    <div class="bt-meter"><div class="bt-meter__row"><span>Budget</span><strong>$0.31 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="31% of budget used"><div class="bt-meter__fill" style="width:31%"></div></div></div>
+  </section>
+  <section class="bt-attempt" aria-labelledby="a1">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a1">Attempt 1</h3><span class="bt-state bt-state--exploring">Exploring</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Running 212 tests in the sandbox.</p>
+    <p class="bt-attempt__paths">queue/land.ts</p>
+    <div class="bt-meter"><div class="bt-meter__row"><span>Budget</span><strong>$0.22 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="22% of budget used"><div class="bt-meter__fill" style="width:22%"></div></div></div>
+  </section>
+  <section class="bt-attempt bt-attempt--stopped" aria-labelledby="a3">
+    <div class="bt-attempt__head"><h3 class="bt-attempt__name" id="a3">Attempt 3</h3><span class="bt-state bt-state--stopped">Stopped</span></div>
+    <p class="bt-attempt__agent">attempt-worker · agy</p>
+    <p class="bt-attempt__now">Stopped by the coordinator: over budget. Building on attempt 2.</p>
+    <p class="bt-attempt__paths">queue/land.ts, queue/retry.ts</p>
+    <div class="bt-meter bt-meter--over"><div class="bt-meter__row"><span>Budget</span><strong>Over: $1.31 of $1.00</strong></div><div class="bt-meter__track" role="img" aria-label="Over budget: 131%"><div class="bt-meter__fill" style="width:100%"></div></div></div>
+  </section>
+</div>
+</body>
+</html>

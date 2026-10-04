@@ -1,0 +1,116 @@
+/* Berth tokens. Generated from tokens.json. Light by default; dark follows the OS unless data-theme="light", and data-theme="dark" forces it. */
+
+@font-face { font-family: 'Archivo Expanded'; src: url('fonts/ArchivoExpanded-800.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Archivo Expanded'; src: url('fonts/ArchivoExpanded-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; src: url('fonts/AtkinsonHyperlegibleNext-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; src: url('fonts/AtkinsonHyperlegibleNext-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; src: url('fonts/AtkinsonHyperlegibleNext-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible Mono'; src: url('fonts/AtkinsonHyperlegibleMono-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible Mono'; src: url('fonts/AtkinsonHyperlegibleMono-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+
+:root {
+  color-scheme: light;
+  --concrete: #e3e4df;
+  --slab: #f2f3ef;
+  --sunk: #d3d5cf;
+  --ink: #121413;
+  --ink-muted: #474c49;
+  --quay: #ffc21a;
+  --on-quay: #121413;
+  --buoy: #f2541b;
+  --on-buoy: #121413;
+  --harbour: #0a4bc2;
+  --on-harbour: #ffffff;
+  --landed: #46c98d;
+  --on-landed: #121413;
+  --escalated: #a61f18;
+  --on-escalated: #ffffff;
+  --vouched: var(--ink);
+  --on-vouched: var(--concrete);
+  --link: #0a4bc2;
+  --danger-text: #a61f18;
+  --focus: #0a4bc2;
+  --shadow-block: 4px 4px 0 0 #121413;
+  --shadow-pressed: 1px 1px 0 0 #121413;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-none: 0px;
+  --border-hair: 1px;
+  --border-rule: 2px;
+  --border-heavy: 4px;
+  --font-display: "Archivo Expanded", "Arial Black", Impact, sans-serif;
+  --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --concrete: #111514;
+    --slab: #1a1f1e;
+    --sunk: #0a0d0c;
+    --ink: #edeee9;
+    --ink-muted: #a8aeaa;
+    --quay: #ffc21a;
+    --on-quay: #121413;
+    --buoy: #ff6a33;
+    --on-buoy: #121413;
+    --harbour: #5b8cff;
+    --on-harbour: #121413;
+    --landed: #46c98d;
+    --on-landed: #121413;
+    --escalated: #a61f18;
+    --on-escalated: #ffffff;
+    --vouched: var(--ink);
+    --on-vouched: var(--concrete);
+    --link: #86aaff;
+    --danger-text: #ff7f75;
+    --focus: #ffc21a;
+    --shadow-block: 4px 4px 0 0 #edeee9;
+    --shadow-pressed: 1px 1px 0 0 #edeee9;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --concrete: #111514;
+  --slab: #1a1f1e;
+  --sunk: #0a0d0c;
+  --ink: #edeee9;
+  --ink-muted: #a8aeaa;
+  --quay: #ffc21a;
+  --on-quay: #121413;
+  --buoy: #ff6a33;
+  --on-buoy: #121413;
+  --harbour: #5b8cff;
+  --on-harbour: #121413;
+  --landed: #46c98d;
+  --on-landed: #121413;
+  --escalated: #a61f18;
+  --on-escalated: #ffffff;
+  --vouched: var(--ink);
+  --on-vouched: var(--concrete);
+  --link: #86aaff;
+  --danger-text: #ff7f75;
+  --focus: #ffc21a;
+  --shadow-block: 4px 4px 0 0 #edeee9;
+  --shadow-pressed: 1px 1px 0 0 #edeee9;
+}
+
+/* Type styles: class .t-<style> */
+.t-display-xl { font-family: var(--font-display); font-size: 64px; line-height: 60px; font-weight: 800; letter-spacing: -0.02em; }
+.t-display { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 800; letter-spacing: -0.01em; }
+.t-heading { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; }
+.t-label { font-family: var(--font-display); font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.t-body-lg { font-family: var(--font-body); font-size: 18px; line-height: 28px; font-weight: 400; }
+.t-body { font-family: var(--font-body); font-size: 16px; line-height: 24px; font-weight: 400; }
+.t-body-strong { font-family: var(--font-body); font-size: 16px; line-height: 24px; font-weight: 700; }
+.t-body-sm { font-family: var(--font-body); font-size: 14px; line-height: 20px; font-weight: 400; }
+.t-code { font-family: var(--font-mono); font-size: 14px; line-height: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.t-data { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.t-data-strong { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }

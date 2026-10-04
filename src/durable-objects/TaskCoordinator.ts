@@ -417,7 +417,8 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
   async recordVouch(
     taskId: string, 
     voucherEmail: string, 
-    voucherName: string
+    voucherName: string,
+    proposalId?: string
   ): Promise<{ status: string }> {
     const now = Date.now();
     this.ctx.storage.sql.exec(
@@ -426,8 +427,34 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
       taskId
     );
 
-    this.logDecision(taskId, undefined, "ChangeVouched", `Human ${voucherName} (${voucherEmail}) vouched for change`);
+    if (proposalId) {
+      const prop = await this.getProposal(proposalId);
+      if (prop) {
+        this.ctx.storage.sql.exec(
+          "UPDATE attempts SET status = 'vouched', updated_at = ? WHERE attempt_id = ?",
+          now,
+          prop.attempt_id
+        );
+        this.ctx.storage.sql.exec(
+          "UPDATE attempts SET status = 'superseded', stop_reason = 'Competitor attempt vouched', updated_at = ? WHERE task_id = ? AND attempt_id != ? AND status IN ('running', 'proposed')",
+          now,
+          taskId,
+          prop.attempt_id
+        );
+      }
+    }
+
+    this.logDecision(taskId, undefined, "ChangeVouched", `Human ${voucherName} (${voucherEmail}) vouched for change${proposalId ? ` (proposal ${proposalId})` : ''}`);
     return { status: "Vouched" };
+  }
+
+  async getProposal(proposalId: string): Promise<any | null> {
+    const cursor = this.ctx.storage.sql.exec(
+      "SELECT * FROM proposals WHERE proposal_id = ?",
+      proposalId
+    );
+    const rows = [...cursor];
+    return rows.length > 0 ? rows[0] : null;
   }
 
   async recordLanding(taskId: string): Promise<{ status: string }> {

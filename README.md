@@ -15,6 +15,7 @@
 - **Autonomous Agent Control Plane & Review UI:** [**https://berth-control-plane.theashtons.workers.dev/ui**](https://berth-control-plane.theashtons.workers.dev/ui)
 - **Public GitHub Mirror:** [**https://github.com/Fysi/berth**](https://github.com/Fysi/berth)
 - **Primary Cloudflare Artifacts Repository:** `artifacts/main` (Default Namespace: `berth.git`)
+- **Berth Design System & Brand Book:** [**design/berth/README.md**](design/berth/README.md)
 - **Demo Script & Video Runbook:** [**docs/demo-script.md**](docs/demo-script.md)
 
 ---

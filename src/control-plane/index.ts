@@ -1,7 +1,7 @@
 import { TaskCoordinator } from "../durable-objects/TaskCoordinator.ts";
 import { MergeQueue } from "../durable-objects/MergeQueue.ts";
 import { handleMcpRequest, BERTH_MCP_TOOLS } from "../mcp/index.ts";
-import { renderDashboardHtml } from "../ui/dashboard.ts";
+import { renderDashboardHtml, renderCandidatePreviewHtml } from "../ui/dashboard.ts";
 import { generateHumanSummary } from "../summary/generator.ts";
 import { validateHumanSummary } from "../summary/validator.ts";
 import { parseProductionIssue, processIssueWebhook } from "../issues/triage.ts";
@@ -31,6 +31,35 @@ export default {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "no-cache"
+        }
+      });
+    }
+
+    // 1b. Candidate Preview Deployment Sandbox (/preview/:taskId or /preview/:taskId/:attemptId)
+    if (url.pathname === "/preview" || url.pathname === "/preview/") {
+      return Response.redirect(`${url.origin}/preview/M4-review`, 302);
+    }
+    if (url.pathname.startsWith("/preview/")) {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const taskId = parts[1] || "M4-review";
+      const attemptId = parts[2] || "att-2";
+
+      if (parts[2] === "healthz" || url.pathname.endsWith("/healthz")) {
+        return Response.json({
+          status: "healthy",
+          preview: true,
+          taskId,
+          attemptId,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      return new Response(renderCandidatePreviewHtml(taskId, attemptId, accessEmail), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-cache",
+          "X-Berth-Preview-Task": taskId,
+          "X-Berth-Preview-Attempt": attemptId
         }
       });
     }
@@ -70,7 +99,8 @@ export default {
 
     // 5. Four UI Views Aggregation Endpoints
     if (url.pathname === "/api/inbox" && request.method === "GET") {
-      const id = env.TASK_COORDINATOR.idFromName("M4-review");
+      const targetTaskId = url.searchParams.get("taskId") || "task-design-system-1";
+      const id = env.TASK_COORDINATOR.idFromName(targetTaskId);
       const stub = env.TASK_COORDINATOR.get(id) as any;
       const inbox = await stub.getInbox();
       return Response.json(inbox);
@@ -206,13 +236,16 @@ export default {
         const body = await request.json() as any;
         const voucherEmail = body.voucherEmail || accessEmail;
         const voucherName = body.voucherName || voucherEmail.split("@")[0];
+        const proposalId = body.proposalId;
 
-        const result = await stub.recordVouch(taskId, voucherEmail, voucherName);
+        const result = await stub.recordVouch(taskId, voucherEmail, voucherName, proposalId);
 
         let queueResult: any = null;
         if (env.MERGE_QUEUE) {
           try {
-            const proposal = await stub.getLatestProposal(taskId);
+            const proposal = proposalId
+              ? ((stub.getProposal ? await stub.getProposal(proposalId) : null) || await stub.getLatestProposal(taskId))
+              : await stub.getLatestProposal(taskId);
             if (proposal) {
               const queueId = env.MERGE_QUEUE.idFromName("global");
               const queueStub = env.MERGE_QUEUE.get(queueId) as any;

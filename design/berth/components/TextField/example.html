@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../components.css"><title>TextField</title><style>html,body{margin:0}body{padding:16px}.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}.stack{display:grid;gap:16px}</style></head>
+<body class="bt-page" style="background:var(--concrete)">
+<form class="stack" onsubmit="event.preventDefault()">
+  <div class="bt-field">
+    <label class="bt-field__label" for="task-what">What should happen</label>
+    <input class="bt-input" id="task-what" value="Show cost on the Landed view">
+    <p class="bt-field__help">Describe the outcome, not the steps. Agents choose the how.</p>
+  </div>
+  <div class="bt-field bt-field--error">
+    <label class="bt-field__label" for="task-budget">Budget</label>
+    <input class="bt-input" id="task-budget" value="$0" aria-invalid="true" aria-describedby="budget-err">
+    <p class="bt-field__error" id="budget-err">Error: a task needs a budget above $0. Try $1.00.</p>
+  </div>
+</form>
+</body>
+</html>

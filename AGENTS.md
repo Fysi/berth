@@ -5,7 +5,7 @@
 
 ---
 
-## The 10 Binding Rules for Agents
+## The 11 Binding Rules for Agents
 
 1. **Never push to trunk.**  
    Do not attempt to push directly to `main` or any trunk ref. Propose your changes through the platform using the Berth MCP tool `propose`. Only the `MergeQueue` lands changes on trunk.
@@ -41,6 +41,9 @@
 
 10. **When the platform gets in your way, report it.**  
     If you encounter platform bugs, tooling friction, or confusing APIs, report it immediately using `report_friction`. Never route around platform bugs quietly or create silent workarounds.
+
+11. **Design and UI binding authority.**  
+    For any UI work, use the berth-design skill; design/berth/README.md is binding.
 
 ---
 

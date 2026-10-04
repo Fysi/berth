@@ -143,6 +143,31 @@ test("Control plane serves HTML dashboard on /ui and / with Accept text/html", a
   assert.ok(html.includes("Vouch & Land"));
 });
 
+test("Control plane serves candidate preview environment on /preview/:taskId", async () => {
+  const mockEnv: any = {};
+  const res = await controlPlane.fetch(
+    new Request("https://berth.test/preview/M4-review"),
+    mockEnv
+  );
+  assert.equal(res.status, 200);
+  assert.ok(res.headers.get("Content-Type")?.includes("text/html"));
+  const html = await res.text();
+  assert.ok(html.includes("Candidate Deployment Sandbox"));
+  assert.ok(html.includes("M4-review"));
+  assert.ok(html.includes("Vouch &amp; Land Candidate"));
+
+  // Check healthz probe
+  const healthRes = await controlPlane.fetch(
+    new Request("https://berth.test/preview/M4-review/healthz"),
+    mockEnv
+  );
+  assert.equal(healthRes.status, 200);
+  const healthJson = await healthRes.json() as any;
+  assert.equal(healthJson.status, "healthy");
+  assert.equal(healthJson.preview, true);
+  assert.equal(healthJson.taskId, "M4-review");
+});
+
 test("Control plane routes /api/summary/generate and /api/summary/validate", async () => {
   const mockEnv: any = {};
   
