@@ -1,20 +1,24 @@
 {
-  "taskId": "M3-attempts",
+  "taskId": "M2-land",
   "attemptId": "att-1",
-  "sessionId": "8a3ea29d-93ff-4056-a465-8adc883467dd",
+  "sessionId": "dccc7a96-977c-4a8c-a6bb-ba9b55389a4e",
+  "leasedPaths": [
+    "src/durable-objects/*",
+    "src/control-plane/*"
+  ],
   "activePlan": [
-    "1. Complete Milestone M0 (Verified: Artifacts repo berth, push queue, Workers deployed, sync tested)",
-    "2. Complete Milestone M1 (Verified: Git trailers enforcement, conflict marker protection, R2 session context capture)",
-    "3. Execute Milestone M3: Build TaskCoordinator SQLite state machine, lease mutual exclusion, and Berth MCP JSON-RPC server",
-    "4. Dogfood attempt-1 fork: Push attempt commits to isolated Artifacts fork and call propose MCP tool"
+    "1. Implement MergeQueue Durable Object with SQLite schema (queue, landing_log, trunk_locks)",
+    "2. Implement Git 2.56 server-side plumbing (in-memory conflict detection via merge-tree, linearization via replay --linearize, test verification)",
+    "3. Implement CAS atomic landing loop with contention retries, SSH provenance signing, and attempt restacking",
+    "4. Connect MergeQueue in control plane Worker (/api/queue, /api/queue/history, auto-queue on vouch)",
+    "5. Add comprehensive unit tests verifying queue ordering, conflict rejection, linearization, CAS retries, and restacking",
+    "6. Deploy and verify on live Cloudflare Workers edge"
   ],
   "progressNotes": [
-    "TaskCoordinator Durable Object implemented with 7-state machine (Intent, Exploring, Proposed, Vouched, Landing, Landed, Escalated).",
-    "Strict path lease mutual exclusion implemented and verified live on Cloudflare Workers edge.",
-    "Budget spend tracking and autonomous stop implemented and tested.",
-    "Berth MCP Server JSON-RPC 2.0 router implemented and live at /mcp endpoint.",
-    "All 18 unit tests passing across control-plane, durable-objects, and mcp modules."
+    "Task M2-land claimed on live control plane, isolated fork berth-M2-land-att-1 provisioned.",
+    "Leases granted for src/durable-objects/* and src/control-plane/*.",
+    "Switched to attempt/M2-land-att-1 branch with remote configured."
   ],
-  "budgetUsedUsd": 1.25,
-  "tokensUsed": 3300
+  "budgetUsedUsd": 0.00,
+  "tokensUsed": 0
 }

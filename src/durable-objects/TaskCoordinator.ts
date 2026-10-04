@@ -415,6 +415,41 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
     return { status: "Vouched" };
   }
 
+  async recordLanding(taskId: string): Promise<{ status: string }> {
+    const now = Date.now();
+    this.ctx.storage.sql.exec(
+      "UPDATE tasks SET status = 'Landing', updated_at = ? WHERE task_id = ?",
+      now,
+      taskId
+    );
+    this.logDecision(taskId, undefined, "LandingStarted", "Change queued in MergeQueue and landing sequence started");
+    return { status: "Landing" };
+  }
+
+  async recordLanded(taskId: string, message: string): Promise<{ status: string }> {
+    const now = Date.now();
+    this.ctx.storage.sql.exec(
+      "UPDATE tasks SET status = 'Landed', updated_at = ? WHERE task_id = ?",
+      now,
+      taskId
+    );
+    this.ctx.storage.sql.exec(
+      "DELETE FROM leases WHERE task_id = ?",
+      taskId
+    );
+    this.logDecision(taskId, undefined, "ChangeLanded", message);
+    return { status: "Landed" };
+  }
+
+  async getLatestProposal(taskId: string): Promise<any | null> {
+    const cursor = this.ctx.storage.sql.exec(
+      "SELECT * FROM proposals WHERE task_id = ? ORDER BY created_at DESC LIMIT 1",
+      taskId
+    );
+    const rows = [...cursor];
+    return rows[0] || null;
+  }
+
   // --- Escalation Management ---
 
   async escalate(

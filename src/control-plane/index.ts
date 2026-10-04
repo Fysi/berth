@@ -86,7 +86,29 @@ export default {
       if (request.method === "POST" && parts[3] === "vouch") {
         const body = await request.json() as any;
         const result = await stub.recordVouch(taskId, body.voucherEmail, body.voucherName);
-        return Response.json(result);
+
+        let queueResult: any = null;
+        if (env.MERGE_QUEUE) {
+          try {
+            const proposal = await stub.getLatestProposal(taskId);
+            if (proposal) {
+              const queueId = env.MERGE_QUEUE.idFromName("global");
+              const queueStub = env.MERGE_QUEUE.get(queueId) as any;
+              queueResult = await queueStub.enqueueChange({
+                taskId,
+                attemptId: proposal.attempt_id,
+                changeId: proposal.proposal_id,
+                commitSha: proposal.commit_sha,
+                vouchedBy: `${body.voucherName} <${body.voucherEmail}>`,
+                autoProcess: true
+              });
+              await stub.recordLanding(taskId);
+            }
+          } catch (qErr: any) {
+            console.warn("MergeQueue auto-enqueue note:", qErr.message);
+          }
+        }
+        return Response.json({ ...result, queue: queueResult });
       }
 
       // /api/tasks/:taskId/escalate
@@ -176,6 +198,29 @@ export default {
       const stub = env.MERGE_QUEUE.get(id) as any;
       const queue = await stub.listQueue();
       return Response.json({ queue });
+    }
+
+    if (url.pathname === "/api/queue/history" && request.method === "GET") {
+      const id = env.MERGE_QUEUE.idFromName("global");
+      const stub = env.MERGE_QUEUE.get(id) as any;
+      const history = await stub.listLandingLog();
+      return Response.json({ history });
+    }
+
+    if (url.pathname === "/api/queue/enqueue" && request.method === "POST") {
+      const body = await request.json() as any;
+      const id = env.MERGE_QUEUE.idFromName("global");
+      const stub = env.MERGE_QUEUE.get(id) as any;
+      const result = await stub.enqueueChange(body);
+      return Response.json(result);
+    }
+
+    if (url.pathname === "/api/queue/process" && request.method === "POST") {
+      const id = env.MERGE_QUEUE.idFromName("global");
+      const stub = env.MERGE_QUEUE.get(id) as any;
+      await stub.processQueue();
+      const queue = await stub.listQueue();
+      return Response.json({ status: "processed", queue });
     }
 
     return Response.json({ error: "Endpoint not found" }, { status: 404 });
