@@ -1,11 +1,11 @@
 {
-  "activeMilestone": "M0",
-  "milestoneTitle": "Home (Artifacts Repo, Mirror, Builds)",
-  "headSha": "c585015",
-  "lastCommit": "feat(hooks): enable automated state preservation and commit trailer validation",
+  "activeMilestone": "M1",
+  "milestoneTitle": "Record (Session Context & Commit Trailers)",
+  "headSha": "63f083c",
+  "lastCommit": "docs: structure documentation using Diataxis framework and add doc-auditor agent",
   "githubMirror": "https://github.com/Fysi/berth",
   "activeForks": [],
-  "currentTask": "M0.2-artifacts-repo-provisioning",
-  "nextStep": "Authenticate Cloudflare via wrangler login or CLOUDFLARE_API_TOKEN to create Artifacts remote",
-  "lastUpdated": "2026-10-04T14:23:43.681Z"
+  "currentTask": "M1.1-trailer-hooks-and-session-capture",
+  "nextStep": "Implement session context pack export and verify trailer enforcement on attempt commits",
+  "lastUpdated": "2026-10-04T14:40:00.000Z"
 }
