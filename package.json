@@ -8,6 +8,7 @@
     "build": "tsc",
     "check": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/**/*.test.ts",
+    "bootstrap": "node --experimental-strip-types scripts/bootstrap-infra.ts",
     "deploy": "wrangler deploy",
     "deploy:mirror": "wrangler deploy --config wrangler.mirror.jsonc",
     "types": "wrangler types"

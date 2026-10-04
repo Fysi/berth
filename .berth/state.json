@@ -1,11 +1,11 @@
 {
   "activeMilestone": "M0",
   "milestoneTitle": "Home (Artifacts Repo, Mirror, Builds)",
-  "headSha": "6d39f8b",
-  "lastCommit": "feat(init): seed Project Berth repository with core manifesto, targets, and architectural plan",
+  "headSha": "c585015",
+  "lastCommit": "feat(hooks): enable automated state preservation and commit trailer validation",
   "githubMirror": "https://github.com/Fysi/berth",
   "activeForks": [],
   "currentTask": "M0.2-artifacts-repo-provisioning",
   "nextStep": "Authenticate Cloudflare via wrangler login or CLOUDFLARE_API_TOKEN to create Artifacts remote",
-  "lastUpdated": "2026-10-04T14:18:39.476Z"
+  "lastUpdated": "2026-10-04T14:23:43.681Z"
 }

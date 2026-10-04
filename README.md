@@ -14,21 +14,26 @@ Berth is an agent-first Git platform built natively on Cloudflare Workers, Artif
 - **History is for reading:** Zero merge commits on trunk. Changes land linearized server-side via `git replay --linearize`.
 - **Customer Zero:** Berth is built on itself from day one. Every platform change is an attempted task vouched by a human.
 
-For full principles, see [MANIFESTO.md](MANIFESTO.md).  
-For delivery milestones and metrics, see [TARGETS.md](TARGETS.md).
+## Documentation (Diátaxis Framework)
+
+Berth documentation is structured using the [Diátaxis framework](https://diataxis.fr/) across four quadrants:
+- **[Tutorials](docs/tutorials/first-task.md):** [Your First Task](docs/tutorials/first-task.md) (from intent to landed change in 10 minutes).
+- **[How-To Guides](docs/how-to/deploy-platform.md):** [Deploy Berth on Cloudflare](docs/how-to/deploy-platform.md).
+- **[Reference](docs/reference/mcp-tools.md):** [MCP Tool Schemas](docs/reference/mcp-tools.md), [Data Model](docs/reference/data-model.md), and [Git Plumbing](docs/reference/git-plumbing.md).
+- **[Explanation](docs/explanation/why-trunk-is-sacred.md):** [Why Trunk is Sacred](docs/explanation/why-trunk-is-sacred.md) and [The Two-Record Model](docs/explanation/two-record-model.md).
+
+Full index: [**docs/README.md**](docs/README.md).
 
 ---
 
-## Architecture at a Glance
+## Autonomous Agent Team (`.agents/`)
 
-- **TaskCoordinator (Durable Object):** One DO per task. Manages leases, budgets, and attempt state.
-- **MergeQueue (Durable Object):** Singleton DO holding exclusive write credentials to trunk.
-- **Git Steward (Container):** Runs Git ≥ 2.56 inside Cloudflare Containers (`ctx.container`) for non-working-tree operations (`git merge-tree --write-tree`, `git replay --linearize`).
-- **Artifacts:** Repositories and forks live in Cloudflare Artifacts. Real-time push events route through Cloudflare Queues.
-- **Evidence Verification:** Passing test suites, reproductions, and Kitesurf screenshot captures via Browser Run.
-- **Model Routing:** Exploration and human summaries run through Cloudflare AI Gateway (`cloudflare/auto`).
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) and [PLAN.md](PLAN.md) for full technical designs.
+- [`architect`](.agents/agents/architect/agent.md): Guards the manifesto and writes decision records.
+- [`attempt-worker`](.agents/agents/attempt-worker/agent.md): Isolated sandbox attempt executor.
+- [`git-steward`](.agents/agents/git-steward/agent.md): Git 2.56 plumbing operator and merge queue custodian.
+- [`reviewer`](.agents/agents/reviewer/agent.md): Evidence auditor rejecting unverified AI claims.
+- [`summariser`](.agents/agents/summariser/agent.md): Authors strict 5-line human summaries (≤80 words).
+- [`doc-auditor`](.agents/agents/doc-auditor/agent.md): Enforces Diátaxis structure and technical documentation correctness.
 
 ---
 
