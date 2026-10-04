@@ -1,0 +1,39 @@
+{
+  "name": "berth",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Agent-first Git platform built on Cloudflare Workers, Artifacts, and Containers",
+  "main": "src/control-plane/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/**/*.test.ts",
+    "deploy": "wrangler deploy",
+    "deploy:mirror": "wrangler deploy --config wrangler.mirror.jsonc",
+    "types": "wrangler types"
+  },
+  "keywords": [
+    "git",
+    "agents",
+    "cloudflare",
+    "artifacts",
+    "workers",
+    "durable-objects",
+    "containers"
+  ],
+  "author": "Project Berth Team",
+  "license": "MIT",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250508.0",
+    "@types/node": "^22.10.0",
+    "cf": "1.0.0-beta.12",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.145.0"
+  }
+}

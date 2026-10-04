@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "berth": {
+      "serverUrl": "https://berth-mcp.workers.dev/sse",
+      "env": {
+        "BERTH_AUTH_TOKEN": "secret://berth-mcp-token"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "berth-control-plane",
+  "main": "src/control-plane/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "artifacts": [
+    {
+      "binding": "ARTIFACTS",
+      "namespace": "default"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TASK_COORDINATOR",
+        "class_name": "TaskCoordinator"
+      },
+      {
+        "name": "MERGE_QUEUE",
+        "class_name": "MergeQueue"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TaskCoordinator", "MergeQueue"]
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "issues": {
+      "enabled": true
+    }
+  }
+}
