@@ -7,10 +7,27 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/validate-commit.js",
+            "command": "node scripts/validate-commit.cjs",
             "timeout": 15
           }
         ]
+      }
+    ]
+  },
+  "state-preserver": {
+    "enabled": true,
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node scripts/sync-state.cjs save",
+        "timeout": 15
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node scripts/sync-state.cjs inject",
+        "timeout": 15
       }
     ]
   }

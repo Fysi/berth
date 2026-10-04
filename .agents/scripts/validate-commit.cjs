@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /**
- * Berth Commit Validation Hook (ES Module)
+ * Berth Commit Validation Hook
+ * Reads PreToolUse JSON payload on stdin, checks if command is a git commit,
+ * and verifies presence of mandatory RFC-2822 trailers (Task, Attempt, Session, Change-Id).
  */
-import fs from 'node:fs';
+const fs = require('fs');
 
 function main() {
   let input = '';
@@ -17,6 +19,7 @@ function main() {
       const payload = JSON.parse(input);
       const cmd = payload?.toolCall?.args?.CommandLine || '';
 
+      // Only inspect git commit commands
       if (/\bgit\s+commit\b/i.test(cmd)) {
         const requiredTrailers = ['Task:', 'Attempt:', 'Session:', 'Change-Id:'];
         const missing = requiredTrailers.filter(t => !cmd.includes(t));
