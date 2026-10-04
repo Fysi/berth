@@ -1,7 +1,8 @@
 import { TaskCoordinator } from "../durable-objects/TaskCoordinator.ts";
 import { MergeQueue } from "../durable-objects/MergeQueue.ts";
+import { handleMcpRequest, BERTH_MCP_TOOLS } from "../mcp/index.ts";
 
-export { TaskCoordinator, MergeQueue };
+export { TaskCoordinator, MergeQueue, handleMcpRequest, BERTH_MCP_TOOLS };
 
 export interface Env {
   ARTIFACTS: any;
@@ -20,13 +21,20 @@ export default {
         platform: "Berth",
         status: "healthy",
         version: "0.1.0",
+        mcp_tools_count: BERTH_MCP_TOOLS.length,
         timestamp: new Date().toISOString()
       });
+    }
+
+    // MCP Server routing (JSON-RPC 2.0 and tool discovery)
+    if (url.pathname === "/mcp" || url.pathname === "/api/mcp" || url.pathname === "/mcp/sse") {
+      return handleMcpRequest(request, env);
     }
 
     // Task coordinator routing
     if (url.pathname.startsWith("/api/tasks/")) {
       const parts = url.pathname.split("/").filter(Boolean);
+      // /api/tasks/:taskId
       const taskId = parts[2];
       if (!taskId) {
         return Response.json({ error: "taskId is required" }, { status: 400 });
@@ -53,9 +61,59 @@ export default {
         return Response.json(task);
       }
 
+      // /api/tasks/:taskId/claim
       if (request.method === "POST" && parts[3] === "claim") {
         const body = await request.json() as any;
         const result = await stub.claimAttempt(taskId, body.agentName || "agent");
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/leases
+      if (request.method === "POST" && parts[3] === "leases") {
+        const body = await request.json() as any;
+        const result = await stub.requestLease(body.attemptId, body.paths, body.durationSeconds);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/propose
+      if (request.method === "POST" && parts[3] === "propose") {
+        const body = await request.json() as any;
+        const result = await stub.propose(body.attemptId, body.commitSha, body.evidenceIds, body.summary);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/vouch
+      if (request.method === "POST" && parts[3] === "vouch") {
+        const body = await request.json() as any;
+        const result = await stub.recordVouch(taskId, body.voucherEmail, body.voucherName);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/escalate
+      if (request.method === "POST" && parts[3] === "escalate") {
+        const body = await request.json() as any;
+        const result = await stub.escalate(body.attemptId, body.question, body.options);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/cost
+      if (request.method === "POST" && parts[3] === "cost") {
+        const body = await request.json() as any;
+        const result = await stub.reportCost(body.attemptId, body.costUsd, body.tokensIn, body.tokensOut);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/friction
+      if (request.method === "POST" && parts[3] === "friction") {
+        const body = await request.json() as any;
+        const result = await stub.reportFriction(body.attemptId, body.obstacle, body.commandOrTool, body.suggestedFix);
+        return Response.json(result);
+      }
+
+      // /api/tasks/:taskId/attempts/:attemptId/context
+      if (request.method === "GET" && parts[3] === "attempts" && parts[5] === "context") {
+        const attemptId = parts[4];
+        const result = await stub.getContextPack(attemptId);
         return Response.json(result);
       }
     }

@@ -1,18 +1,20 @@
 {
-  "taskId": "M1.1-trailer-hooks-and-session-capture",
+  "taskId": "M3-attempts",
   "attemptId": "att-1",
   "sessionId": "8a3ea29d-93ff-4056-a465-8adc883467dd",
   "activePlan": [
     "1. Complete Milestone M0 (Verified: Artifacts repo berth, push queue, Workers deployed, sync tested)",
-    "2. Implement Task M1.1: Git trailers enforcement and conflict marker blocker",
-    "3. Implement Task M1.2: Session context pack capture to R2 and git notes on refs/notes/agent-session",
-    "4. Implement Task M1.3: AGENTS.md rules verification and integration tests"
+    "2. Complete Milestone M1 (Verified: Git trailers enforcement, conflict marker protection, R2 session context capture)",
+    "3. Execute Milestone M3: Build TaskCoordinator SQLite state machine, lease mutual exclusion, and Berth MCP JSON-RPC server",
+    "4. Dogfood attempt-1 fork: Push attempt commits to isolated Artifacts fork and call propose MCP tool"
   ],
   "progressNotes": [
-    "Milestone M0 achieved and verified live on Cloudflare Workers and Artifacts Git remote.",
-    "R2 bucket berth-sessions created.",
-    "Advancing into Milestone M1: Record."
+    "TaskCoordinator Durable Object implemented with 7-state machine (Intent, Exploring, Proposed, Vouched, Landing, Landed, Escalated).",
+    "Strict path lease mutual exclusion implemented and verified live on Cloudflare Workers edge.",
+    "Budget spend tracking and autonomous stop implemented and tested.",
+    "Berth MCP Server JSON-RPC 2.0 router implemented and live at /mcp endpoint.",
+    "All 18 unit tests passing across control-plane, durable-objects, and mcp modules."
   ],
-  "budgetUsedUsd": 0.0,
-  "tokensUsed": 0
+  "budgetUsedUsd": 1.25,
+  "tokensUsed": 3300
 }

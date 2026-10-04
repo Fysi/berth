@@ -1,11 +1,14 @@
 {
-  "activeMilestone": "M1",
-  "milestoneTitle": "Record (Session Context & Commit Trailers)",
-  "headSha": "6683d6c",
+  "activeMilestone": "M3",
+  "milestoneTitle": "Attempts (TaskCoordinator, Leases, & MCP Server)",
+  "headSha": "3152622",
   "lastCommit": "feat(record): enforce commit trailers, conflict marker protection, and session context packs in R2",
   "githubMirror": "https://github.com/Fysi/berth",
-  "activeForks": [],
-  "currentTask": "M1-complete-ready-for-M3-attempts",
-  "nextStep": "Execute Milestone M3 (Attempts: TaskCoordinator DO, ephemeral Artifacts forks, ctx.container sandboxes)",
-  "lastUpdated": "2026-10-04T14:44:44.131Z"
+  "activeForks": [
+    "berth-M3-attempts-att-1",
+    "berth-M3-attempts-att-2"
+  ],
+  "currentTask": "M3.1-task-coordinator-and-mcp-server",
+  "nextStep": "Propose att-1 change via MCP server and wire MergeQueue linearization",
+  "lastUpdated": "2026-10-04T15:45:00.000Z"
 }
