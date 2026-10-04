@@ -14,6 +14,9 @@ try {
   };
 }
 
+import { aggregateTaskCost } from "../summary/cost.ts";
+import type { TaskCostSummary } from "../summary/cost.ts";
+
 export interface Env {
   ARTIFACTS: any;
   AI_GATEWAY_TOKEN?: string;
@@ -566,6 +569,22 @@ export class TaskCoordinator extends (BaseDurableObject as new (ctx: any, env: E
       terminated: false,
       remainingBudgetUsd: Math.max(0, Number(row.budget_usd) - newTaskSpent)
     };
+  }
+
+  async getCostSummary(taskId: string): Promise<TaskCostSummary> {
+    const attemptsCursor = this.ctx.storage.sql.exec(
+      "SELECT attempt_id, agent_id, status, spent_usd, tokens_in, tokens_out FROM attempts WHERE task_id = ?",
+      taskId
+    );
+    const attempts = [...attemptsCursor] as any[];
+    return aggregateTaskCost(taskId, attempts.map(a => ({
+      attemptId: a.attempt_id,
+      agentId: a.agent_id,
+      status: a.status,
+      spentUsd: a.spent_usd,
+      tokensIn: a.tokens_in,
+      tokensOut: a.tokens_out
+    })));
   }
 
   // --- Platform Friction Reporting ---

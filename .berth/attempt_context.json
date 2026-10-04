@@ -1,34 +1,27 @@
 {
-  "taskId": "M4-review",
+  "taskId": "M5-close-loop",
   "attemptId": "att-1",
   "sessionId": "7ed6cff5-226b-4e4b-8cd3-459e6606cdfd",
   "leasedPaths": [
     "src/control-plane/*",
     "src/durable-objects/*",
+    "src/issues/*",
+    "src/containers/*",
     "src/summary/*",
-    "src/ui/*",
-    "src/mirror/*"
+    "src/ui/*"
   ],
   "activePlan": [
-    "1. Task M4.1: Real-time Push Conflict Matrix Engine - Wire Artifacts push queue consumer (cf.artifacts.repo.pushed) in mirror/queue handler to calculate git merge-tree conflict matrix across attempts and broadcast updates via WebSocket/SSE.",
-    "2. Task M4.2: Human Summary Generator (Manifesto Compliant) - Implement summary worker calling AI Gateway Auto Router (cloudflare/auto) with diff and evidence, strictly enforcing 5-line template, <=80 words, and mandatory non-empty 'Not verified' line.",
-    "3. Task M4.3: Four UI Views (Inbox, Task, Change, Landed) - Build ultra-fast keyboard-first SPA with full keyboard navigation (j/k, v for vouch, e for escalate), zero clutter (no raw SHAs/branches), and Access email vouching.",
-    "4. Comprehensive unit test suites covering conflict matrix calculation, human summary generator & validator, UI routing and API endpoints.",
+    "1. Task M5.1: Container Snapshot & Rapid Boot Pipeline - Implement container snapshot manager (snapshotContainer) with <=2s restore time and sandbox warmup.",
+    "2. Task M5.2: AI Gateway Cost Attribution - Implement cost aggregator and cf-aig-metadata header injection tracking cumulative dollar/token spend across attempts.",
+    "3. Task M5.3: Production Issues to Autonomous Task Loop - Implement /api/webhooks/issues webhook parser, triage engine spawning autonomous racing attempts to reproduce and fix crashes, and surface fixes in human Inbox.",
+    "4. Comprehensive unit test suites verifying container snapshots, cost attribution, and issue-to-fix pipeline.",
     "5. Deploy and verify live on Cloudflare Workers edge."
   ],
   "progressNotes": [
-    "Task M4-review created on live control plane, isolated fork berth-M4-review-att-1 provisioned.",
-    "Leases granted for src/control-plane/*, src/durable-objects/*, src/summary/*, src/ui/*, src/mirror/*.",
-    "Implemented real-time push conflict matrix in TaskCoordinator with pairwise lease and commit collision checks.",
-    "Implemented cf.artifacts.repo.pushed queue consumer in src/mirror/index.ts dispatching push events to TaskCoordinator.",
-    "Implemented manifesto-compliant 5-line human summary validator and generator (<=80 words, mandatory Not verified, cost breakdown).",
-    "Implemented ultra-fast keyboard-first review dashboard (Inbox, Task, Change, Landed views) with WebSocket live streaming.",
-    "Wired Cloudflare Access authenticated email vouching with auto-enqueuing into MergeQueue.",
-    "All 39 unit tests passing across all test suites.",
-    "Deployed to live Cloudflare Workers edge (Version ID: 0ebd6d0e-f54d-4ee4-abc5-23533ba494dc).",
-    "Verified end-to-end: proposal created -> surfaced in Inbox -> vouched with Access attribution -> processed and Landed in MergeQueue.",
-    "Session context pack uploaded to R2 and git notes pushed to Artifacts and GitHub remotes."
+    "Task M5-close-loop created on live control plane, isolated fork berth-M5-close-loop-att-1 provisioned.",
+    "Leases granted for src/control-plane/*, src/durable-objects/*, src/issues/*, src/containers/*, src/summary/*, src/ui/*.",
+    "Branch attempt/M5-close-loop-att-1 created."
   ],
-  "budgetUsedUsd": 0.55,
-  "tokensUsed": 2100
+  "budgetUsedUsd": 0.00,
+  "tokensUsed": 0
 }

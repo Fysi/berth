@@ -4,6 +4,8 @@ import { handleMcpRequest, BERTH_MCP_TOOLS } from "../mcp/index.ts";
 import { renderDashboardHtml } from "../ui/dashboard.ts";
 import { generateHumanSummary } from "../summary/generator.ts";
 import { validateHumanSummary } from "../summary/validator.ts";
+import { parseProductionIssue, processIssueWebhook } from "../issues/triage.ts";
+import { ContainerSnapshotManager } from "../containers/snapshot.ts";
 
 export { TaskCoordinator, MergeQueue, handleMcpRequest, BERTH_MCP_TOOLS };
 
@@ -15,6 +17,8 @@ export interface Env {
   AI_GATEWAY_TOKEN?: string;
   ACCOUNT_ID?: string;
 }
+
+const snapshotManager = new ContainerSnapshotManager();
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -99,7 +103,36 @@ export default {
       return Response.json({ history });
     }
 
-    // 6. Task coordinator routing
+    // 6. Production Issues Webhook (Observability Autotriage to Task Loop)
+    if (url.pathname === "/api/webhooks/issues" && request.method === "POST") {
+      const raw = await request.json() as any;
+      const parsed = parseProductionIssue(raw);
+      const result = await processIssueWebhook(parsed, env.TASK_COORDINATOR);
+      return Response.json({
+        triageStatus: "triaged",
+        ...result,
+        inboxUrl: "/ui#inbox"
+      });
+    }
+
+    // 7. Container Snapshots & Rapid Boot Management
+    if (url.pathname === "/api/snapshots" && request.method === "GET") {
+      return Response.json({ snapshots: snapshotManager.listSnapshots() });
+    }
+
+    if (url.pathname === "/api/snapshots/create" && request.method === "POST") {
+      const body = await request.json() as any;
+      const snapshot = await snapshotManager.snapshotContainer(null, body.name || "berth-base-v1");
+      return Response.json(snapshot);
+    }
+
+    if (url.pathname === "/api/snapshots/restore" && request.method === "POST") {
+      const body = await request.json() as any;
+      const restored = await snapshotManager.restoreContainerFromSnapshot(body.name || "berth-base-v1", body);
+      return Response.json(restored);
+    }
+
+    // 8. Task coordinator routing
     if (url.pathname.startsWith("/api/tasks/")) {
       const parts = url.pathname.split("/").filter(Boolean);
       // /api/tasks/:taskId
@@ -214,6 +247,11 @@ export default {
         return Response.json(result);
       }
 
+      if (request.method === "GET" && parts[3] === "cost") {
+        const cost = await stub.getCostSummary(taskId);
+        return Response.json(cost);
+      }
+
       // /api/tasks/:taskId/friction
       if (request.method === "POST" && parts[3] === "friction") {
         const body = await request.json() as any;
@@ -229,7 +267,7 @@ export default {
       }
     }
 
-    // 7. Session context pack routing
+    // 9. Session context pack routing
     if (url.pathname.startsWith("/api/sessions/")) {
       const parts = url.pathname.split("/").filter(Boolean);
       // /api/sessions/:taskId/:attemptId/:sessionId
@@ -281,7 +319,7 @@ export default {
       }
     }
 
-    // 8. Merge queue routing
+    // 10. Merge queue routing
     if (url.pathname === "/api/queue" && request.method === "GET") {
       const id = env.MERGE_QUEUE.idFromName("global");
       const stub = env.MERGE_QUEUE.get(id) as any;

@@ -261,3 +261,58 @@ test("Vouch action extracts Cf-Access-Authenticated-User-Email header", async ()
   assert.equal(recordedEmail, "cf-user@theashtons.dev");
 });
 
+test("Control plane routes /api/webhooks/issues and triggers autonomous triage", async () => {
+  const mockEnv: any = {
+    TASK_COORDINATOR: {
+      idFromName: (_name: string) => "coord-id",
+      get: (_id: any) => ({
+        async createTask() { return { status: "created" }; },
+        async claimAttempt(_taskId: string, agentName: string) { return { attemptId: `att-${agentName}` }; },
+        async requestLease() { return { granted: true }; },
+        async propose() { return { status: "Proposed", proposalId: "prop-auto-fix" }; }
+      })
+    }
+  };
+
+  const issueReq = new Request("https://berth.test/api/webhooks/issues", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      issue_id: "obs-crash-prod",
+      message: "Uncaught TypeError: networkError is undefined",
+      stack: "TypeError: networkError is undefined\n    at handleRequest (file:///src/control-plane/index.ts:18:12)",
+      environment: "production"
+    })
+  });
+
+  const issueRes = await controlPlane.fetch(issueReq, mockEnv);
+  assert.equal(issueRes.status, 200);
+  const issueJson = await issueRes.json() as any;
+  assert.equal(issueJson.triageStatus, "triaged");
+  assert.equal(issueJson.status, "Proposed");
+  assert.equal(issueJson.taskId, "task-issue-obs-crash-prod");
+  assert.ok(issueJson.proposalId);
+  assert.equal(issueJson.inboxUrl, "/ui#inbox");
+});
+
+test("Control plane routes /api/snapshots for rapid container boot management", async () => {
+  const mockEnv: any = {};
+  const listRes = await controlPlane.fetch(new Request("https://berth.test/api/snapshots"), mockEnv);
+  assert.equal(listRes.status, 200);
+  const listJson = await listRes.json() as any;
+  assert.ok(listJson.snapshots.length >= 1);
+
+  const restoreReq = new Request("https://berth.test/api/snapshots/restore", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "berth-base-v1", attemptId: "att-restore" })
+  });
+
+  const restoreRes = await controlPlane.fetch(restoreReq, mockEnv);
+  assert.equal(restoreRes.status, 200);
+  const restoreJson = await restoreRes.json() as any;
+  assert.equal(restoreJson.ready, true);
+  assert.ok(restoreJson.bootDurationMs <= 2000);
+});
+
+
